@@ -11,9 +11,12 @@ import {
   X,
   AlertCircle,
   CheckCircle2,
+  Calendar,
+  MapIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/axios";
+import Cookies from "js-cookie";
 
 interface AlertState {
   show: boolean;
@@ -26,6 +29,7 @@ const AuthPage = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showCPassword, setShowCPassword] = useState(false);
 
   const [alert, setAlert] = useState<AlertState>({
     show: false,
@@ -34,9 +38,13 @@ const AuthPage = () => {
   });
 
   const [formData, setFormData] = useState({
-    name: "",
+    username: "",
     email: "",
     password: "",
+    confirmpassword: "",
+    gender: "",
+    dob: "",
+    address: "",
   });
 
   const showAlert = (message: string, type: "success" | "error") => {
@@ -65,9 +73,10 @@ const AuthPage = () => {
 
       console.log(response);
 
-      if (response.data.message == "Login Successfully") {
+      if (response.data.status) {
         if (response.data.token) {
-          localStorage.setItem("token", response.data.token);
+          // localStorage.setItem("token", response.data.token);
+          Cookies.set("token", response.data.token, { expires: 1, path: "/" });
         }
 
         showAlert(
@@ -80,7 +89,15 @@ const AuthPage = () => {
         if (isLogin) {
           setTimeout(() => router.push("/"), 2000);
         } else {
-          setFormData({ name: "", email: "", password: "" });
+          setFormData({
+            username: "",
+            email: "",
+            password: "",
+            confirmpassword: "",
+            gender: "",
+            dob: "",
+            address: "",
+          });
           setTimeout(() => setIsLogin(true), 1500);
         }
       } else {
@@ -140,7 +157,7 @@ const AuthPage = () => {
         </p>
       </div>
 
-      <div className="w-full max-w-md z-10">
+      <div className="w-full max-w-xl z-10">
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
           <div className="text-center mb-10">
             <h1 className="text-3xl font-bold mb-2">
@@ -158,13 +175,13 @@ const AuthPage = () => {
               <div className="relative group">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5 group-focus-within:text-blue-400 transition-colors" />
                 <input
-                  name="name"
+                  name="username"
                   type="text"
-                  placeholder="Nama Lengkap"
+                  placeholder="Username"
                   required
-                  value={formData.name}
+                  value={formData.username}
                   onChange={handleChange}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-12 text-white focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all placeholder:text-gray-600"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-12 text-white focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all placeholder:text-white"
                 />
               </div>
             )}
@@ -178,7 +195,7 @@ const AuthPage = () => {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-12 text-white focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all placeholder:text-gray-600"
+                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-12 text-white focus:outline-none focus:border-purple-500/50 focus:ring-1 focus:ring-purple-500/50 transition-all placeholder:text-white"
               />
             </div>
 
@@ -191,7 +208,7 @@ const AuthPage = () => {
                 required
                 value={formData.password}
                 onChange={handleChange}
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-12 text-white focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all placeholder:text-gray-600"
+                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-12 text-white focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all placeholder:text-white"
               />
               <button
                 type="button"
@@ -205,6 +222,99 @@ const AuthPage = () => {
                 )}
               </button>
             </div>
+
+            {!isLogin && (
+              <div className="relative group">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5 group-focus-within:text-blue-400 transition-colors" />
+                <input
+                  name="confirmpassword"
+                  type={showCPassword ? "text" : "password"}
+                  placeholder="Confirm Password"
+                  required
+                  value={formData.confirmpassword}
+                  onChange={handleChange}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-12 text-white focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all placeholder:text-white"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCPassword(!showCPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                >
+                  {showCPassword ? (
+                    <EyeOff className="w-5 h-5" />
+                  ) : (
+                    <Eye className="w-5 h-5" />
+                  )}
+                </button>
+              </div>
+            )}
+
+            {!isLogin && (
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <label className="text-white">Gender :</label>
+                  <div className="relative group mt-2">
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5 group-focus-within:text-blue-400 transition-colors" />
+                    <select
+                      name="gender"
+                      required
+                      value={formData.gender}
+                      onChange={handleChange}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-12 text-white focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all appearance-none cursor-pointer"
+                    >
+                      <option value="" disabled hidden className="bg-[#1a1a1a]">
+                        Select Gender
+                      </option>
+                      <option value="0" className="bg-[#1a1a1a] text-white">
+                        Male
+                      </option>
+                      <option value="1" className="bg-[#1a1a1a] text-white">
+                        Female
+                      </option>
+                    </select>
+
+                    <div className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-gray-500">
+                      <svg className="h-4 w-4 fill-current" viewBox="0 0 20 20">
+                        <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex-1">
+                  <label className="text-white">Date of Birth :</label>
+                  <div className="relative group mt-2">
+                    <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 w-5 h-5 group-focus-within:text-blue-400 transition-colors" />
+                    <input
+                      name="dob"
+                      type="date"
+                      required
+                      value={formData.dob}
+                      onChange={handleChange}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all [color-scheme:dark] placeholder:text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {!isLogin && (
+              <>
+                <label className="text-white">Address :</label>
+                <div className="relative group mt-2">
+                  <MapIcon className="absolute left-4 top-6 -translate-y-1/2 text-gray-500 w-5 h-5 group-focus-within:text-blue-400 transition-colors" />
+
+                  <textarea
+                    name="address" // atau name lain sesuai kebutuhan
+                    placeholder="Alamat Lengkap"
+                    rows="4"
+                    value={formData.address}
+                    onChange={handleChange}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-12 text-white focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all placeholder:text-gray-600 resize-y min-h-[120px]"
+                  />
+                </div>
+              </>
+            )}
 
             <button
               disabled={isLoading}

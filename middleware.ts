@@ -5,10 +5,6 @@ export function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
   const { pathname } = request.nextUrl;
 
-  if (!token && pathname.startsWith("/auth")) {
-    return NextResponse.next();
-  }
-
   if (!token && !pathname.startsWith("/auth")) {
     return NextResponse.redirect(new URL("/auth", request.url));
   }
