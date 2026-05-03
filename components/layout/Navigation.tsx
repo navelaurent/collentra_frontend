@@ -13,8 +13,10 @@ import {
 } from "../ui/dropdown-menu";
 import Cookies from "js-cookie";
 import { LogoutModal } from "../ui/modal/logout_modal";
+import { getUserInfo } from "@/helpers/authHelpers";
 
 export function Navigation() {
+  const user = getUserInfo();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -48,8 +50,10 @@ export function Navigation() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="sm" className="gap-2">
-                  <div className="h-8 w-8 rounded-full bg-primary" />
-                  <span className="text-sm">Profile</span>
+                  <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground">
+                    {user?.name.substring(0, 1).toUpperCase() || ""}
+                  </div>
+                  <span className="text-sm">{user?.name}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">

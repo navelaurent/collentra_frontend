@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   Mail,
   Lock,
@@ -8,34 +8,22 @@ import {
   Loader2,
   Eye,
   EyeOff,
-  X,
-  AlertCircle,
-  CheckCircle2,
   Calendar,
-  MapIcon,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import api from "@/lib/axios";
 import Cookies from "js-cookie";
-
-interface AlertState {
-  show: boolean;
-  message: string;
-  type: "success" | "error";
-}
+import ReCAPTCHA from "react-google-recaptcha";
+import { useAlert } from "@/components/ui/showAlert";
 
 const AuthPage = () => {
   const router = useRouter();
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
+  const { showAlert } = useAlert();
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showCPassword, setShowCPassword] = useState(false);
-
-  const [alert, setAlert] = useState<AlertState>({
-    show: false,
-    message: "",
-    type: "success",
-  });
 
   const [formData, setFormData] = useState({
     username: "",
@@ -44,19 +32,18 @@ const AuthPage = () => {
     confirmpassword: "",
     gender: "",
     dob: "",
-    address: "",
+    tokenCaptcha: "",
   });
-
-  const showAlert = (message: string, type: "success" | "error") => {
-    setAlert({ show: true, message, type });
-
-    setTimeout(() => {
-      setAlert((prev) => ({ ...prev, show: false }));
-    }, 4000);
-  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleCaptchaChange = (token: string | null) => {
+    setFormData((prev) => ({
+      ...prev,
+      tokenCaptcha: token || "",
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -65,8 +52,18 @@ const AuthPage = () => {
 
     try {
       const endpoint = isLogin ? "/Auth/login" : "/Auth/register";
+
+      if (!formData.tokenCaptcha) {
+        showAlert("Silahkan centang captcha terlebih dahulu!", "error");
+        return;
+      }
+
       const payload = isLogin
-        ? { email: formData.email, password: formData.password }
+        ? {
+            email: formData.email,
+            password: formData.password,
+            tokenCaptcha: formData.tokenCaptcha,
+          }
         : formData;
 
       const response = await api.post(endpoint, payload);
@@ -75,7 +72,6 @@ const AuthPage = () => {
 
       if (response.data.status) {
         if (response.data.token) {
-          // localStorage.setItem("token", response.data.token);
           Cookies.set("token", response.data.token, { expires: 1, path: "/" });
         }
 
@@ -96,7 +92,7 @@ const AuthPage = () => {
             confirmpassword: "",
             gender: "",
             dob: "",
-            address: "",
+            tokenCaptcha: "",
           });
           setTimeout(() => setIsLogin(true), 1500);
         }
@@ -104,6 +100,7 @@ const AuthPage = () => {
         showAlert(response.data.message, "error");
       }
     } catch (error: any) {
+      recaptchaRef.current?.reset();
       const errorMsg =
         error.response?.data?.message || "Terjadi kesalahan koneksi ke server";
       showAlert(errorMsg, "error");
@@ -116,46 +113,6 @@ const AuthPage = () => {
     <div className="min-h-screen bg-[#0f172a] flex items-center justify-center p-6 relative overflow-hidden text-white font-sans">
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/20 rounded-full blur-[120px]"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/20 rounded-full blur-[120px]"></div>
-
-      <div
-        className={`fixed top-8 right-8 z-50 flex items-start gap-4 px-8 py-6 rounded-3xl border backdrop-blur-xl shadow-[0_20px_60px_-10px_rgba(0,0,0,0.5)] transition-all flex-col min-w-[380px] max-w-[500px] ${
-          alert.type === "success"
-            ? "bg-green-500/10 border-green-500/30 text-green-300"
-            : "bg-red-500/10 border-red-500/30 text-red-300"
-        }`}
-        style={{
-          transition: "all 0.6s cubic-bezier(0.22, 1, 0.36, 1)",
-          opacity: alert.show ? 1 : 0,
-          transform: alert.show
-            ? "translateY(0) scale(1)"
-            : "translateY(-20px) scale(0.95)",
-          pointerEvents: alert.show ? "auto" : "none",
-          visibility: alert.show ? "visible" : "hidden",
-        }}
-      >
-        <div className="flex items-center gap-3.5 w-full">
-          {alert.type === "success" ? (
-            <CheckCircle2 className="w-7 h-7 text-green-400 shrink-0" />
-          ) : (
-            <AlertCircle className="w-7 h-7 text-red-400 shrink-0" />
-          )}
-
-          <span className="font-bold text-lg text-white/90">
-            {alert.type === "success" ? "Sukses!" : "Gagal"}
-          </span>
-
-          <button
-            onClick={() => setAlert({ ...alert, show: false })}
-            className="ml-auto p-1.5 rounded-full hover:bg-white/10 transition-colors"
-          >
-            <X className="w-5 h-5 opacity-60 hover:opacity-100" />
-          </button>
-        </div>
-
-        <p className="text-white/80 text-base leading-relaxed pl-10.5">
-          {alert.message}
-        </p>
-      </div>
 
       <div className="w-full max-w-xl z-10">
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
@@ -265,10 +222,10 @@ const AuthPage = () => {
                       <option value="" disabled hidden className="bg-[#1a1a1a]">
                         Select Gender
                       </option>
-                      <option value="0" className="bg-[#1a1a1a] text-white">
+                      <option value="M" className="bg-[#1a1a1a] text-white">
                         Male
                       </option>
-                      <option value="1" className="bg-[#1a1a1a] text-white">
+                      <option value="F" className="bg-[#1a1a1a] text-white">
                         Female
                       </option>
                     </select>
@@ -298,23 +255,13 @@ const AuthPage = () => {
               </div>
             )}
 
-            {!isLogin && (
-              <>
-                <label className="text-white">Address :</label>
-                <div className="relative group mt-2">
-                  <MapIcon className="absolute left-4 top-6 -translate-y-1/2 text-gray-500 w-5 h-5 group-focus-within:text-blue-400 transition-colors" />
-
-                  <textarea
-                    name="address" // atau name lain sesuai kebutuhan
-                    placeholder="Alamat Lengkap"
-                    rows="4"
-                    value={formData.address}
-                    onChange={handleChange}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl py-3 px-12 text-white focus:outline-none focus:border-blue-500/50 focus:ring-1 focus:ring-blue-500/50 transition-all placeholder:text-gray-600 resize-y min-h-[120px]"
-                  />
-                </div>
-              </>
-            )}
+            <div className="flex justify-center w-full my-4">
+              <ReCAPTCHA
+                ref={recaptchaRef}
+                sitekey={process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY!}
+                onChange={handleCaptchaChange}
+              />
+            </div>
 
             <button
               disabled={isLoading}

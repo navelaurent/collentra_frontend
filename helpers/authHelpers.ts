@@ -24,7 +24,9 @@ export function getUserInfo() {
         decoded[
           "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"
         ] || decoded.email,
-      role: decoded["Role"] || decoded.role,
+      sid:
+        decoded["http://schemas.xmlsoap.org/ws/2005/05/identity/claims/sid"] ||
+        decoded.sid,
     };
   } catch (error) {
     return null;

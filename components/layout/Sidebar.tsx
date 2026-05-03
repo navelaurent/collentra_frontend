@@ -43,21 +43,21 @@ const navItems = [
 ];
 
 const bottomNavItems = [
-  {
-    label: "Notifications",
-    href: "/notifications",
-    icon: Bell,
-  },
-  {
-    label: "Profile",
-    href: "/profile",
-    icon: User,
-  },
-  {
-    label: "Settings",
-    href: "/settings",
-    icon: Settings,
-  },
+  // {
+  //   label: "Notifications",
+  //   href: "/notifications",
+  //   icon: Bell,
+  // },
+  // {
+  //   label: "Profile",
+  //   href: "/profile",
+  //   icon: User,
+  // },
+  // {
+  //   label: "Settings",
+  //   href: "/settings",
+  //   icon: Settings,
+  // },
 ];
 
 export function Sidebar() {

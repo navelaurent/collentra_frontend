@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { LogOut } from "lucide-react";
+import { getUserInfo } from "@/helpers/authHelpers";
 
 interface LogoutModalProps {
   isOpen: boolean;
@@ -11,6 +12,7 @@ interface LogoutModalProps {
 
 export function LogoutModal({ isOpen, onClose, onConfirm }: LogoutModalProps) {
   const [animate, setAnimate] = useState(false);
+  const user = getUserInfo();
 
   useEffect(() => {
     if (isOpen) {
@@ -45,7 +47,7 @@ export function LogoutModal({ isOpen, onClose, onConfirm }: LogoutModalProps) {
             <LogOut className="h-7 w-7 text-destructive" />
           </div>
           <h3 className="text-xl font-bold text-foreground tracking-tight">
-            Sudah selesai, Agra?
+            Sudah selesai, {user?.name}?
           </h3>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
             Sesi kamu akan ditutup. Jangan lupa simpan semua perubahan data

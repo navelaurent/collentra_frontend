@@ -3,8 +3,6 @@
 import { MainLayout } from "../../components/layout/MainLayout";
 import { StatsOverview } from "../../components/dashboard/StatsOverview";
 import { ActivityFeed } from "../../components/dashboard/ActivityFeed";
-import { Plus } from "lucide-react";
-import { Button } from "../../components/ui/button";
 import { getUserInfo } from "@/helpers/authHelpers";
 
 export default function Home() {
@@ -20,12 +18,7 @@ export default function Home() {
             </h1>
             <p className="text-muted-foreground mt-1">Geda gedi geda geda</p>
           </div>
-          <div className="flex gap-2">
-            <Button className="gap-2">
-              <Plus className="h-4 w-4" />
-              New Group
-            </Button>
-          </div>
+          <div className="flex gap-2"></div>
         </div>
 
         <StatsOverview />
