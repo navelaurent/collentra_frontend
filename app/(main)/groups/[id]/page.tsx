@@ -16,42 +16,45 @@ import {
   LineChart,
   Line,
 } from "recharts";
-import { Plus } from "lucide-react";
+import { Plus, UserPlus } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import api from "@/lib/axios";
 import { useAlert } from "@/components/ui/showAlert";
+import { AddTaskModal } from "@/components/ui/modal/group/addTaskModal";
+import { InviteMemberModal } from "@/components/ui/modal/group/inviteMemberModal";
+import { getUserInfo } from "@/helpers/authHelpers";
 
 export default function GroupDetailPage({
   params,
 }: {
   params: { id: string };
 }) {
+  const user = getUserInfo();
   const unwrappedParams = React.use(params);
   const id = unwrappedParams.id;
   const { showAlert } = useAlert();
   const [groupDetail, setGroupDetail] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // State visibility modal
+  const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const [isTaskOpen, setIsTaskOpen] = useState(false);
+
   const fetchGroupDetail = async () => {
     setIsLoading(true);
     try {
       const response = await api.get("/Group/group-detail", {
-        params: {
-          groupId: id,
-        },
+        params: { groupId: id },
       });
       if (response.data.data.status) {
         const rawData = response.data.data;
-
-        const updatedData = {
+        setGroupDetail({
           ...rawData,
           overallProgress:
             rawData.taskTotal > 0
               ? Math.round((rawData.taskComplete / rawData.taskTotal) * 100)
               : 0,
-        };
-
-        setGroupDetail(updatedData);
+        });
       }
     } catch (error: any) {
       showAlert(error.response?.data?.message || "Gagal memuat data", "error");
@@ -64,7 +67,7 @@ export default function GroupDetailPage({
     if (id) fetchGroupDetail();
   }, [id]);
 
-  if (isLoading) {
+  if (isLoading)
     return (
       <MainLayout>
         <div className="flex h-96 items-center justify-center">
@@ -72,8 +75,8 @@ export default function GroupDetailPage({
         </div>
       </MainLayout>
     );
-  }
 
+  // console.log(groupDetail, user?.sid);
   if (!groupDetail) return null;
 
   return (
@@ -89,13 +92,28 @@ export default function GroupDetailPage({
               {groupDetail.description}
             </p>
           </div>
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
-            Add Task
-          </Button>
+          {user?.sid == groupDetail.groupOwnerId && (
+            <>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="gap-2"
+                  onClick={() => setIsInviteOpen(true)}
+                >
+                  <UserPlus className="h-4 w-4" /> Invite Member
+                </Button>
+                <Button
+                  className="gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500"
+                  onClick={() => setIsTaskOpen(true)}
+                >
+                  <Plus className="h-4 w-4" /> Add Task
+                </Button>
+              </div>
+            </>
+          )}
         </div>
 
-        {/* Main Stats */}
+        {/* --- Bagian kode lama yang tidak diubah --- */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Card className="p-6">
             <div className="space-y-2">
@@ -106,12 +124,11 @@ export default function GroupDetailPage({
               <Progress value={groupDetail.overallProgress} className="mt-3" />
             </div>
           </Card>
-
           <Card className="p-6">
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Tasks Completed</p>
               <p className="text-3xl font-bold text-foreground">
-                {groupDetail.taskComplete} / {groupDetail.taskTotal}{" "}
+                {groupDetail.taskComplete} / {groupDetail.taskTotal}
               </p>
               <p className="text-xs text-muted-foreground mt-2">
                 {groupDetail.taskTotal - groupDetail.taskComplete} tasks
@@ -119,7 +136,6 @@ export default function GroupDetailPage({
               </p>
             </div>
           </Card>
-
           <Card className="p-6">
             <div className="space-y-2">
               <p className="text-sm text-muted-foreground">Team Members</p>
@@ -131,15 +147,12 @@ export default function GroupDetailPage({
           </Card>
         </div>
 
-        {/* Tabs */}
         <Tabs defaultValue="members" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="members">Members</TabsTrigger>
             <TabsTrigger value="tasks">Tasks</TabsTrigger>
             <TabsTrigger value="progress">Progress</TabsTrigger>
           </TabsList>
-
-          {/* Members Tab */}
           <TabsContent value="members" className="space-y-4">
             <Card className="p-6">
               <h3 className="font-semibold text-foreground mb-4">
@@ -191,8 +204,6 @@ export default function GroupDetailPage({
               </div>
             </Card>
           </TabsContent>
-
-          {/* Tasks Tab */}
           <TabsContent value="tasks" className="space-y-4">
             <Card className="p-6">
               <h3 className="font-semibold text-foreground mb-4">Tasks</h3>
@@ -213,27 +224,17 @@ export default function GroupDetailPage({
                         </span>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge
-                        variant="secondary"
-                        className={`text-xs ${
-                          task.status === "done" || task.status === "completed"
-                            ? "bg-emerald-500/20 text-emerald-700 dark:text-emerald-400"
-                            : task.status === "inprogress"
-                              ? "bg-amber-500/20 text-amber-700 dark:text-amber-400"
-                              : "bg-slate-500/20 text-slate-700 dark:text-slate-400"
-                        }`}
-                      >
-                        {task.status}
-                      </Badge>
-                    </div>
+                    <Badge
+                      variant="secondary"
+                      className={`text-xs ${task.status === "done" ? "bg-emerald-500/20 text-emerald-700" : "bg-slate-500/20"}`}
+                    >
+                      {task.status}
+                    </Badge>
                   </div>
                 ))}
               </div>
             </Card>
           </TabsContent>
-
-          {/* Progress Tab */}
           <TabsContent value="progress" className="space-y-4">
             <Card className="p-6">
               <h3 className="font-semibold text-foreground mb-4">
@@ -264,6 +265,38 @@ export default function GroupDetailPage({
           </TabsContent>
         </Tabs>
       </div>
+
+      {user?.sid == groupDetail.groupOwnerId && (
+        <>
+          <InviteMemberModal
+            isOpen={isInviteOpen}
+            onClose={() => setIsInviteOpen(false)}
+            groupId={id}
+            onSuccess={(msg: any) => {
+              showAlert(msg, "success");
+              fetchGroupDetail();
+            }}
+            onFailed={(msg: any) => {
+              showAlert(msg, "error");
+            }}
+          />
+
+          <AddTaskModal
+            isOpen={isTaskOpen}
+            onClose={() => setIsTaskOpen(false)}
+            userId={user?.sid}
+            groupId={id}
+            members={groupDetail.members}
+            onSuccess={(msg: any) => {
+              showAlert(msg, "success");
+              fetchGroupDetail();
+            }}
+            onFailed={(msg: any) => {
+              showAlert(msg, "error");
+            }}
+          />
+        </>
+      )}
     </MainLayout>
   );
 }

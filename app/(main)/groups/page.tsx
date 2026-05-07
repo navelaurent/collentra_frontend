@@ -14,7 +14,6 @@ import { useAlert } from "@/components/ui/showAlert";
 export default function GroupsPage() {
   const user = getUserInfo();
   const { showAlert } = useAlert();
-
   const [groups, setGroups] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);

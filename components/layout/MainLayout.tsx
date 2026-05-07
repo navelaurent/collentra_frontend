@@ -14,7 +14,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       <Navigation />
       <div className="flex">
         <Sidebar />
-        <main className="flex-1 md:ml-64 md:pt-16 pt-4 pb-20 md:pb-0">
+        <main className="flex-1 md:ml-64 pb-20 md:pb-0">
           {children}
         </main>
       </div>
