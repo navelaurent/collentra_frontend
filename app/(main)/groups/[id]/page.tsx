@@ -16,13 +16,14 @@ import {
   LineChart,
   Line,
 } from "recharts";
-import { Plus, UserPlus } from "lucide-react";
+import { Edit, Plus, UserPlus } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import api from "@/lib/axios";
 import { useAlert } from "@/components/ui/showAlert";
 import { AddTaskModal } from "@/components/ui/modal/group/addTaskModal";
 import { InviteMemberModal } from "@/components/ui/modal/group/inviteMemberModal";
 import { getUserInfo } from "@/helpers/authHelpers";
+import { EditGroupModal } from "@/components/ui/modal/group/editGroupModal";
 
 export default function GroupDetailPage({
   params,
@@ -35,9 +36,8 @@ export default function GroupDetailPage({
   const { showAlert } = useAlert();
   const [groupDetail, setGroupDetail] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  // State visibility modal
   const [isInviteOpen, setIsInviteOpen] = useState(false);
+  const [isEditGroupOpen, setIsEditGroupOpen] = useState(false);
   const [isTaskOpen, setIsTaskOpen] = useState(false);
 
   const fetchGroupDetail = async () => {
@@ -98,6 +98,13 @@ export default function GroupDetailPage({
                 <Button
                   variant="outline"
                   className="gap-2"
+                  onClick={() => setIsEditGroupOpen(true)}
+                >
+                  <Edit className="h-4 w-4" /> Edit Group
+                </Button>
+                <Button
+                  variant="outline"
+                  className="gap-2"
                   onClick={() => setIsInviteOpen(true)}
                 >
                   <UserPlus className="h-4 w-4" /> Invite Member
@@ -113,7 +120,6 @@ export default function GroupDetailPage({
           )}
         </div>
 
-        {/* --- Bagian kode lama yang tidak diubah --- */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <Card className="p-6">
             <div className="space-y-2">
@@ -268,6 +274,22 @@ export default function GroupDetailPage({
 
       {user?.sid == groupDetail.groupOwnerId && (
         <>
+          <EditGroupModal
+            isOpen={isEditGroupOpen}
+            onClose={() => setIsEditGroupOpen(false)}
+            groupId={id}
+            groupName={groupDetail.groupName}
+            groupDesc={groupDetail.description}
+            groupArchived={groupDetail.isArchived}
+            onSuccess={(msg: any) => {
+              showAlert(msg, "success");
+              fetchGroupDetail();
+            }}
+            onFailed={(msg: any) => {
+              showAlert(msg, "error");
+            }}
+          />
+
           <InviteMemberModal
             isOpen={isInviteOpen}
             onClose={() => setIsInviteOpen(false)}

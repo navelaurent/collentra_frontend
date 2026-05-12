@@ -68,7 +68,7 @@ const AuthPage = () => {
 
       const response = await api.post(endpoint, payload);
 
-      console.log(response);
+      // console.log(response);
 
       if (response.data.status) {
         if (response.data.token) {
