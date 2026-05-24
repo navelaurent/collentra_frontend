@@ -19,6 +19,7 @@ import { useState, useEffect } from "react";
 import api from "@/lib/axios";
 import { getUserInfo } from "@/helpers/authHelpers";
 import { useAlert } from "@/components/ui/showAlert";
+import { formatDate } from "@/lib/utils";
 
 const iconMap: Record<string, any> = {
   task_completed: CheckCircle2,
@@ -38,7 +39,9 @@ export default function NotificationsPage() {
     const fetchAllData = async () => {
       try {
         const [resActivity, resInvites] = await Promise.all([
-          api.get("/Invitation", { params: { userId: user?.sid } }),
+          api.get("Notification/getAllNotif", {
+            params: { targetId: user?.sid },
+          }),
           api.get("/Invitation", { params: { userId: user?.sid } }),
         ]);
 
@@ -67,12 +70,25 @@ export default function NotificationsPage() {
   }, [user?.sid]);
 
   const unreadCount =
-    activities.filter((n) => !n.read).length +
-    invites.filter((n) => !n.read).length;
+    activities.filter((n) => !n.isOpen).length +
+    invites.filter((n) => !n.isOpen).length;
 
-  const handleMarkAllAsRead = () => {
-    setActivities(activities.map((n) => ({ ...n, read: true })));
-    setInvites(invites.map((n) => ({ ...n, read: true })));
+  const handleMarkAllAsRead = async () => {
+    try {
+      await api.put("Notification/markAllRead", `"${user?.sid}"`, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      setActivities(activities.map((n) => ({ ...n, isOpen: true })));
+      setInvites(invites.map((n) => ({ ...n, isOpen: true })));
+
+      showAlert("All notifications marked as read", "success");
+    } catch (error) {
+      console.error("Gagal update status baca ke server:", error);
+      showAlert("Failed to update notifications", "error");
+    }
   };
 
   const handleInvitationResponse = async (
@@ -134,7 +150,6 @@ export default function NotificationsPage() {
           </Card>
         )}
 
-        {/* SECTION 1: Group Invites (Hanya ambil dari state invites) */}
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
             <UserPlus className="h-5 w-5 text-primary" /> Group Invites
@@ -151,28 +166,25 @@ export default function NotificationsPage() {
                 <Card
                   key={notification.id}
                   className={`p-5 transition-all duration-200 ${
-                    notification.read
+                    notification.isOpen
                       ? "bg-background"
                       : "bg-primary/5 border-primary/20 shadow-sm"
                   }`}
                 >
                   <div className="flex items-start gap-4">
-                    {/* Icon Section */}
                     <div
                       className={`rounded-full p-2.5 shrink-0 ${
-                        notification.read ? "bg-muted" : "bg-primary/20"
+                        notification.isOpen ? "bg-muted" : "bg-primary/20"
                       }`}
                     >
                       <UserPlus
-                        className={`h-5 w-5 ${notification.read ? "text-muted-foreground" : "text-primary"}`}
+                        className={`h-5 w-5 ${notification.isOpen ? "text-muted-foreground" : "text-primary"}`}
                       />
                     </div>
 
-                    {/* Content Section */}
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-start gap-2">
                         <div>
-                          {/* Group Name & Badge */}
                           <div className="flex items-center gap-2 flex-wrap">
                             <h3 className="font-bold text-foreground text-lg leading-none">
                               {notification.groupName}
@@ -185,25 +197,28 @@ export default function NotificationsPage() {
                             </Badge>
                           </div>
 
-                          {/* Inviter Info */}
                           <p className="text-sm font-medium text-primary mt-1">
                             Invited by: {notification.inviterName} (
                             {notification.inviterEmail})
                           </p>
                         </div>
 
-                        {/* Timestamp & Unread Dot */}
-                        <div className="flex flex-col items-end gap-2 shrink-0">
+                        <div className="flex flex-col items-end gap-1.5 shrink-0">
                           <span className="text-xs text-muted-foreground whitespace-nowrap">
                             {notification.timestamp}
                           </span>
+
+                          {/* Slot Countdown Expired */}
+                          <span className="text-[11px] font-medium text-destructive whitespace-nowrap bg-destructive/10 px-2 py-0.5 rounded-md font-mono animate-pulse">
+                            {notification.expiredCountdown}
+                          </span>
+                          {/* 
                           {!notification.read && (
-                            <div className="h-2.5 w-2.5 rounded-full bg-primary animate-pulse" />
-                          )}
+                            <div className="h-2.5 w-2.5 rounded-full bg-primary animate-pulse mt-0.5" />
+                          )} */}
                         </div>
                       </div>
 
-                      {/* Description & Message Area */}
                       <div className="mt-3 space-y-2">
                         <div className="bg-muted/50 rounded-lg p-3 border border-border/50">
                           <p className="text-sm font-semibold text-foreground italic">
@@ -220,7 +235,6 @@ export default function NotificationsPage() {
                         </div>
                       </div>
 
-                      {/* Action Buttons */}
                       <div className="flex gap-3 mt-4">
                         <Button
                           size="sm"
@@ -259,7 +273,6 @@ export default function NotificationsPage() {
           </div>
         </div>
 
-        {/* SECTION 2: Project Activity (Hanya ambil dari state activities) */}
         <div className="space-y-4">
           <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
             <Send className="h-5 w-5 text-primary" /> Project Activity
@@ -275,18 +288,41 @@ export default function NotificationsPage() {
                 return (
                   <Card
                     key={notification.id}
-                    className={`p-4 transition-colors ${notification.read ? "bg-background" : "bg-primary/5"}`}
+                    className={`p-4 transition-all duration-200 ${
+                      notification.isOpen
+                        ? "bg-background border-border"
+                        : "bg-primary/5 border-primary/30 shadow-sm ring-1 ring-primary/10"
+                    }`}
                   >
                     <div className="flex items-start gap-4">
                       <div
-                        className={`rounded-full p-2 ${notification.read ? "bg-muted" : "bg-primary/20"}`}
+                        className={`rounded-full p-2 ${
+                          notification.isOpen
+                            ? "bg-muted text-muted-foreground"
+                            : "bg-primary/20 text-primary"
+                        }`}
                       >
                         <Icon className="h-4 w-4" />
                       </div>
                       <div className="flex-1">
-                        <p className="font-medium">{notification.title}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {notification.message}
+                        <div className="flex justify-between items-start gap-2 mb-1">
+                          <p
+                            className={`text-sm ${notification.isOpen ? "font-medium text-muted-foreground" : "font-bold text-foreground"}`}
+                          >
+                            {notification.title}
+                          </p>
+                          <p className="text-xs text-muted-foreground whitespace-nowrap mt-0.5">
+                            {formatDate(notification.createdAt)}
+                          </p>
+                        </div>
+                        <p
+                          className={`text-sm ${
+                            notification.isOpen
+                              ? "text-muted-foreground/60"
+                              : "text-muted-foreground"
+                          }`}
+                        >
+                          {notification.description}
                         </p>
                       </div>
                     </div>
