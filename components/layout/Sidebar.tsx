@@ -36,36 +36,36 @@ const navItems = [
     icon: Calendar,
   },
   {
-    label: "Messages",
-    href: "/messages",
-    icon: MessageSquare,
+    label: "Settings",
+    href: "/settings",
+    icon: Settings,
   },
 ];
 
-const bottomNavItems = [
-  // {
-  //   label: "Notifications",
-  //   href: "/notifications",
-  //   icon: Bell,
-  // },
-  // {
-  //   label: "Profile",
-  //   href: "/profile",
-  //   icon: User,
-  // },
-  // {
-  //   label: "Settings",
-  //   href: "/settings",
-  //   icon: Settings,
-  // },
-];
+// const bottomNavItems = [
+//   {
+//     label: "Notifications",
+//     href: "/notifications",
+//     icon: Bell,
+//   },
+//   {
+//     label: "Profile",
+//     href: "/profile",
+//     icon: User,
+//   },
+//   {
+//     label: "Settings",
+//     href: "/settings",
+//     icon: Settings,
+//   },
+// ];
 
 export function Sidebar() {
   const pathname = usePathname();
 
   return (
     <aside className="hidden md:flex fixed left-0 top-16 h-[calc(100vh-4rem)] w-64 flex-col border-r border-border bg-sidebar">
-      <nav className="flex-1 space-y-1 p-4">
+      <nav className="flex-1 space-y-4 p-4">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive =
@@ -89,7 +89,7 @@ export function Sidebar() {
         })}
       </nav>
 
-      <nav className="space-y-1 border-t border-sidebar-border p-4">
+      {/* <nav className="space-y-1 border-t border-sidebar-border p-4">
         {bottomNavItems.map((item) => {
           const Icon = item.icon;
           const isActive =
@@ -111,7 +111,7 @@ export function Sidebar() {
             </Link>
           );
         })}
-      </nav>
+      </nav> */}
     </aside>
   );
 }

@@ -78,7 +78,6 @@ export default function GroupsPage() {
   return (
     <MainLayout>
       <div className="space-y-8 p-4 sm:p-6 lg:p-8">
-        {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Groups</h1>
@@ -95,7 +94,6 @@ export default function GroupsPage() {
           </Button>
         </div>
 
-        {/* Search Bar */}
         <div className="relative">
           <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
           <Input
@@ -106,7 +104,6 @@ export default function GroupsPage() {
           />
         </div>
 
-        {/* Groups Grid & Loading State */}
         {isLoading ? (
           <div className="text-center py-10">
             <div className="animate-spin inline-block w-8 h-8 border-4 border-current border-t-transparent text-primary rounded-full mb-2"></div>
@@ -135,7 +132,6 @@ export default function GroupsPage() {
               ))}
             </div>
 
-            {/* Empty State */}
             {filteredGroups.length === 0 && (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">No groups found</p>

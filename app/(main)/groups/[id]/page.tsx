@@ -15,6 +15,8 @@ import {
   Download,
   Paperclip,
   Send,
+  MoreVertical,
+  UserMinus,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import api from "@/lib/axios";
@@ -23,6 +25,13 @@ import { AddTaskModal } from "@/components/ui/modal/group/addTaskModal";
 import { InviteMemberModal } from "@/components/ui/modal/group/inviteMemberModal";
 import { getUserInfo } from "@/helpers/authHelpers";
 import { EditGroupModal } from "@/components/ui/modal/group/editGroupModal";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { KickMemberModal } from "@/components/ui/modal/group/kickMemberModal";
 
 export default function GroupDetailPage({
   params,
@@ -38,6 +47,10 @@ export default function GroupDetailPage({
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [isEditGroupOpen, setIsEditGroupOpen] = useState(false);
   const [isTaskOpen, setIsTaskOpen] = useState(false);
+  const [isKickOpen, setIsKickOpen] = useState(false);
+  const [selectedMember, setSelectedMember] = useState<{
+    kickedId: string;
+  } | null>(null);
 
   const fetchGroupDetail = async () => {
     setIsLoading(true);
@@ -47,6 +60,20 @@ export default function GroupDetailPage({
       });
       if (response.data.data.status) {
         const rawData = response.data.data;
+
+        const isStillMember = rawData.members?.some(
+          (member: any) =>
+            member.id?.toLowerCase() === user?.sid?.toLowerCase(),
+        );
+
+        if (
+          !isStillMember &&
+          user?.sid?.toLowerCase() !== rawData.groupOwnerId?.toLowerCase()
+        ) {
+          window.location.href = "/";
+          return;
+        }
+
         setGroupDetail({
           ...rawData,
           overallProgress:
@@ -75,13 +102,11 @@ export default function GroupDetailPage({
       </MainLayout>
     );
 
-  // console.log(groupDetail, user?.sid);
   if (!groupDetail) return null;
 
   return (
     <MainLayout>
       <div className="space-y-8 p-4 sm:p-6 lg:p-8">
-        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-foreground">
@@ -178,7 +203,10 @@ export default function GroupDetailPage({
                       <div>
                         <div className="flex items-center gap-2">
                           <p className="font-medium text-foreground">
-                            {member.name}
+                            {member.name}{" "}
+                            <span className="text-xs font-normal text-muted-foreground/80 dark:text-gray-400">
+                              ({member.emailMember})
+                            </span>
                           </p>
                           {(member.role?.toLowerCase() === "admin" ||
                             member.role?.toLowerCase() === "owner") && (
@@ -195,14 +223,48 @@ export default function GroupDetailPage({
                         </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-foreground">
-                        {member.progress}%
-                      </p>
-                      <Progress
-                        value={member.progress}
-                        className="w-20 h-1.5 mt-1"
-                      />
+
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <p className="font-semibold text-foreground">
+                          {member.progress}%
+                        </p>
+                        <Progress
+                          value={member.progress}
+                          className="w-20 h-1.5 mt-1"
+                        />
+                      </div>
+
+                      {user?.sid == groupDetail.groupOwnerId && (
+                        <>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                              >
+                                <MoreVertical className="h-4 w-4" />
+                                <span className="sr-only">Open menu</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-40">
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
+                                onClick={() => {
+                                  setSelectedMember({
+                                    kickedId: member.id,
+                                  });
+                                  setIsKickOpen(true);
+                                }}
+                              >
+                                <UserMinus className="mr-2 h-4 w-4" />
+                                Kick Member
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -235,6 +297,28 @@ export default function GroupDetailPage({
                     >
                       {task.status}
                     </Badge>
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                        >
+                          <MoreVertical className="h-4 w-4" />
+                          <span className="sr-only">Open menu</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-40">
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
+                          // onClick={() => handleKickMember(task.id)}
+                        >
+                          <UserMinus className="mr-2 h-4 w-4" />
+                          Edit Task
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 ))}
               </div>
@@ -264,7 +348,7 @@ export default function GroupDetailPage({
                   {
                     id: 2,
                     senderId: user?.sid,
-                    senderName: "Agra Radhitya", // Menampilkan nama kamu saat ini
+                    senderName: "Agra Radhitya",
                     fileName: "Design_Assets.zip",
                     size: "15.1 MB",
                     time: "11:05 AM",
@@ -279,7 +363,6 @@ export default function GroupDetailPage({
                   },
                 ].map((chat) => {
                   const isMine = chat.senderId === user?.sid;
-                  // Ambil huruf pertama dari nama untuk dijadikan inisial avatar
                   const initial = chat.senderName
                     ? chat.senderName.charAt(0).toUpperCase()
                     : "?";
@@ -425,6 +508,21 @@ export default function GroupDetailPage({
             userId={user?.sid}
             groupId={id}
             members={groupDetail.members}
+            onSuccess={(msg: any) => {
+              showAlert(msg, "success");
+              fetchGroupDetail();
+            }}
+            onFailed={(msg: any) => {
+              showAlert(msg, "error");
+            }}
+          />
+
+          <KickMemberModal
+            isOpen={isKickOpen}
+            onClose={() => setIsKickOpen(false)}
+            groupId={id}
+            ownerId={groupDetail.groupOwnerId}
+            kickedId={selectedMember?.kickedId || ""}
             onSuccess={(msg: any) => {
               showAlert(msg, "success");
               fetchGroupDetail();

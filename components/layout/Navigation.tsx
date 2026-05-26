@@ -63,12 +63,12 @@ export function Navigation() {
                     My Profile
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem asChild>
+                {/* <DropdownMenuItem asChild>
                   <Link href="/settings" className="gap-2">
                     <Settings className="h-4 w-4" />
                     Settings
                   </Link>
-                </DropdownMenuItem>
+                </DropdownMenuItem> */}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="text-destructive gap-2 cursor-pointer"
@@ -122,7 +122,7 @@ export function Navigation() {
                 Profile
               </Link>
             </Button>
-            <Button
+            {/* <Button
               variant="ghost"
               size="sm"
               className="w-full justify-start gap-2"
@@ -132,7 +132,7 @@ export function Navigation() {
                 <Settings className="h-4 w-4" />
                 Settings
               </Link>
-            </Button>
+            </Button> */}
             <Button
               variant="ghost"
               size="sm"
