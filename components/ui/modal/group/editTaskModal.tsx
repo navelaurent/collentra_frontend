@@ -52,7 +52,7 @@ export const EditTaskModal = ({
 
       setIsLoadingData(true);
       try {
-        const res = await api.put("/Task/get-edit", null, {
+        const res = await api.get("/Task/get-edit", {
           params: {
             taskId: task.id,
           },
@@ -61,7 +61,6 @@ export const EditTaskModal = ({
         const dbTask = res.data.data;
 
         if (dbTask) {
-          console.log(dbTask);
           const normalizeStatus = (statusStr: any) => {
             if (!statusStr) return "Todo";
             const s = String(statusStr).toLowerCase().trim();

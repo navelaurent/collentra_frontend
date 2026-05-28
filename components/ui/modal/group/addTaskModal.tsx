@@ -58,7 +58,7 @@ export const AddTaskModal = ({
         },
       );
 
-      const successMsg = res.data?.message || "Successfully add this email";
+      const successMsg = res.data?.message || "Successfully adding task";
       onSuccess(successMsg);
       onClose();
 
@@ -129,28 +129,10 @@ export const AddTaskModal = ({
           </div>
         </div>
 
-        {/* <div className="space-y-2">
-          <label className="text-sm font-medium text-gray-300">Status</label>
-          <Select
-            defaultValue="todo"
-            onValueChange={(v) => setForm({ ...form, status: v })}
-          >
-            <SelectTrigger className="w-full bg-white/5 border-white/10 text-white">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent className="bg-[#1e293b] border-white/10 text-white">
-              <SelectItem value="Todo">To Do</SelectItem>
-              <SelectItem value="InProgress">In Progress</SelectItem>
-              <SelectItem value="InReview">In Review</SelectItem>
-              <SelectItem value="Done">Done</SelectItem>
-            </SelectContent>
-          </Select>
-        </div> */}
-
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Priority</label>
           <Select
-            defaultValue="medium"
+            required
             onValueChange={(v) => setForm({ ...form, priority: v })}
           >
             <SelectTrigger className="w-full bg-white/5 border-white/10 text-white">

@@ -18,6 +18,10 @@ import {
   MoreVertical,
   UserMinus,
   Calendar,
+  CheckCircle,
+  XCircle,
+  Star,
+  Power,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import api from "@/lib/axios";
@@ -34,6 +38,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { KickMemberModal } from "@/components/ui/modal/group/kickMemberModal";
 import { EditTaskModal } from "@/components/ui/modal/group/editTaskModal";
+import { ActionModal } from "@/components/ui/modal/ActionModal";
 
 export default function GroupDetailPage({
   params,
@@ -55,6 +60,9 @@ export default function GroupDetailPage({
   } | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
+  const [isTerminateModalOpen, setIsTerminateModalOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("tasks");
 
   const fetchGroupDetail = async () => {
     setIsLoading(true);
@@ -181,100 +189,13 @@ export default function GroupDetailPage({
           </Card>
         </div>
 
-        <Tabs defaultValue="members" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="members">Members</TabsTrigger>
             <TabsTrigger value="tasks">Tasks</TabsTrigger>
+            <TabsTrigger value="members">Members</TabsTrigger>
             <TabsTrigger value="progress">Shared Documents</TabsTrigger>
           </TabsList>
-          <TabsContent value="members" className="space-y-4">
-            <Card className="p-6">
-              <h3 className="font-semibold text-foreground mb-4">
-                Team Members
-              </h3>
-              <div className="space-y-4">
-                {groupDetail.members?.map((member: any) => (
-                  <div
-                    key={member.id}
-                    className="flex items-center justify-between pb-4 border-b border-border last:border-0 last:pb-0"
-                  >
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-10 w-10">
-                        <AvatarFallback className="bg-primary text-primary-foreground">
-                          {member.name.substring(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium text-foreground">
-                            {member.name}{" "}
-                            <span className="text-xs font-normal text-muted-foreground/80 dark:text-gray-400">
-                              ({member.emailMember})
-                            </span>
-                          </p>
-                          {(member.role?.toLowerCase() === "admin" ||
-                            member.role?.toLowerCase() === "owner") && (
-                            <Badge
-                              variant="secondary"
-                              className="text-[10px] px-1.5 py-0 bg-amber-500/10 text-amber-600 border-amber-500/20"
-                            >
-                              Owner
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          {member.tasksCompleted} tasks completed
-                        </p>
-                      </div>
-                    </div>
 
-                    <div className="flex items-center gap-4">
-                      <div className="text-right">
-                        <p className="font-semibold text-foreground">
-                          {member.progress}%
-                        </p>
-                        <Progress
-                          value={member.progress}
-                          className="w-20 h-1.5 mt-1"
-                        />
-                      </div>
-
-                      {user?.sid == groupDetail.groupOwnerId && (
-                        <>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                              >
-                                <MoreVertical className="h-4 w-4" />
-                                <span className="sr-only">Open menu</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-40">
-                              <DropdownMenuItem
-                                className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
-                                onClick={() => {
-                                  setSelectedMember({
-                                    kickedId: member.id,
-                                  });
-                                  setIsKickOpen(true);
-                                }}
-                              >
-                                <UserMinus className="mr-2 h-4 w-4" />
-                                Kick Member
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </Card>
-          </TabsContent>
           <TabsContent value="tasks" className="space-y-4">
             <Card className="p-6">
               <h3 className="font-semibold text-foreground mb-4">Tasks</h3>
@@ -343,7 +264,9 @@ export default function GroupDetailPage({
                                 ? "bg-purple-500/10 text-purple-400 border border-purple-500/20"
                                 : task.status?.toLowerCase() === "inprogress"
                                   ? "bg-sky-500/10 text-sky-400 border border-sky-500/20"
-                                  : "bg-zinc-500/10 text-zinc-400 border border-zinc-500/20" // Todo
+                                  : task.status?.toLowerCase() === "terminate"
+                                    ? "bg-red-500/10 text-red-400 border border-red-500/20"
+                                    : "bg-zinc-500/10 text-zinc-400 border border-zinc-500/20"
                           }`}
                         >
                           {task.status === "inprogress"
@@ -356,7 +279,8 @@ export default function GroupDetailPage({
                     </div>
 
                     {user?.sid == groupDetail.groupOwnerId &&
-                      task?.status?.toLowerCase() !== "done" && (
+                      task?.status?.toLowerCase() !== "done" &&
+                      task?.status?.toLowerCase() !== "terminate" && (
                         <>
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -371,14 +295,34 @@ export default function GroupDetailPage({
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-40">
                               <DropdownMenuItem
-                                className="cursor-pointer text-yellow-400 focus:text-blue-400 focus:bg-blue-500/10"
+                                className="cursor-pointer text-yellow-400 focus:text-yellow-400 focus:bg-yellow-500/10"
                                 onClick={() => {
                                   setSelectedTask(task);
                                   setIsEditModalOpen(true);
                                 }}
                               >
-                                <MoreVertical className="mr-2 h-4 w-4" />
+                                <Edit className="mr-2 h-4 w-4" />
                                 Edit Task
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="cursor-pointer text-green-400 focus:text-green-400 focus:bg-green-500/10"
+                                onClick={() => {
+                                  setSelectedTask(task.id);
+                                  setIsCompleteModalOpen(true);
+                                }}
+                              >
+                                <CheckCircle className="mr-2 h-4 w-4" />
+                                Complete Task
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                className="cursor-pointer text-red-400 focus:text-red-400 focus:bg-red-500/10"
+                                onClick={() => {
+                                  setSelectedTask(task.id);
+                                  setIsTerminateModalOpen(true);
+                                }}
+                              >
+                                <XCircle className="mr-2 h-4 w-4" />
+                                Terminate Task
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -389,6 +333,112 @@ export default function GroupDetailPage({
               </div>
             </Card>
           </TabsContent>
+
+          <TabsContent value="members" className="space-y-4">
+            <Card className="p-6">
+              <h3 className="font-semibold text-foreground mb-4">
+                Team Members
+              </h3>
+              <div className="space-y-4">
+                {groupDetail.members?.map((member: any) => (
+                  <div
+                    key={member.id}
+                    className={`flex items-center justify-between p-4 border-b border-border last:border-0 last:pb-0 
+                    ${member.id === user?.sid ? "bg-blue-50 dark:bg-blue-900/20 rounded-md" : ""}`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Avatar className="h-10 w-10">
+                        <AvatarFallback className="bg-primary text-primary-foreground">
+                          {member.name.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <p className="font-medium text-foreground">
+                            {member.name}{" "}
+                            <span className="text-xs font-normal text-muted-foreground/80 dark:text-gray-400">
+                              ({member.emailMember})
+                            </span>
+                          </p>
+                          {(member.role?.toLowerCase() === "admin" ||
+                            member.role?.toLowerCase() === "owner") && (
+                            <Badge
+                              variant="secondary"
+                              className="text-[10px] px-1.5 py-0 bg-green-500/10 text-green-600 border-green-500/20"
+                            >
+                              <Star />
+                              Leader
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {member.tasksCompleted} / {member.totalTasks} tasks
+                          completed
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <p className="font-semibold text-foreground">
+                          {member.totalTasks > 0
+                            ? Math.round(
+                                (member.tasksCompleted / member.totalTasks) *
+                                  100,
+                              )
+                            : 0}
+                          %
+                        </p>
+                        <Progress
+                          value={
+                            member.totalTasks > 0
+                              ? Math.round(
+                                  (member.tasksCompleted / member.totalTasks) *
+                                    100,
+                                )
+                              : 0
+                          }
+                          className="w-20 h-1.5 mt-1"
+                        />
+                      </div>
+
+                      {user?.sid == groupDetail.groupOwnerId && (
+                        <>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                              >
+                                <MoreVertical className="h-4 w-4" />
+                                <span className="sr-only">Open menu</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-40">
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
+                                onClick={() => {
+                                  setSelectedMember({
+                                    kickedId: member.id,
+                                  });
+                                  setIsKickOpen(true);
+                                }}
+                              >
+                                <UserMinus className="mr-2 h-4 w-4" />
+                                Kick Member
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </TabsContent>
+
           <TabsContent value="progress" className="space-y-4">
             <Card className="p-0 flex flex-col h-[500px] overflow-hidden">
               <div className="p-4 border-b border-border bg-muted/30">
@@ -606,6 +656,46 @@ export default function GroupDetailPage({
             userId={user?.sid}
             groupId={id}
             task={selectedTask}
+            onSuccess={(msg: any) => {
+              showAlert(msg, "success");
+              fetchGroupDetail();
+            }}
+            onFailed={(msg: any) => {
+              showAlert(msg, "error");
+            }}
+          />
+
+          <ActionModal
+            isOpen={isCompleteModalOpen}
+            onClose={() => setIsCompleteModalOpen(false)}
+            endpoint={`/Task/complete-task`}
+            payload={{ leaderId: user?.sid, taskId: selectedTask }}
+            icon={<CheckCircle className="h-7 w-7 text-green-600" />}
+            title="Complete Task"
+            variant="success"
+            description="Mark this task as completed?"
+            successMessage="Task completed!"
+            failedMessage="Failed to complete task!"
+            onSuccess={(msg: any) => {
+              showAlert(msg, "success");
+              fetchGroupDetail();
+            }}
+            onFailed={(msg: any) => {
+              showAlert(msg, "error");
+            }}
+          />
+
+          <ActionModal
+            isOpen={isTerminateModalOpen}
+            onClose={() => setIsTerminateModalOpen(false)}
+            endpoint={`/Task/terminate-task`}
+            payload={{ leaderId: user?.sid, taskId: selectedTask }}
+            icon={<Power className="h-7 w-7 text-red-500" />}
+            title="Terminate Task"
+            variant="danger"
+            description="Are you sure you want to terminate this task?"
+            successMessage="Task terminated!"
+            failedMessage="Failed to terminate task!"
             onSuccess={(msg: any) => {
               showAlert(msg, "success");
               fetchGroupDetail();
