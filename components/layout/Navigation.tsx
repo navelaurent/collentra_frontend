@@ -122,17 +122,7 @@ export function Navigation() {
                 Profile
               </Link>
             </Button>
-            {/* <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start gap-2"
-              asChild
-            >
-              <Link href="/settings">
-                <Settings className="h-4 w-4" />
-                Settings
-              </Link>
-            </Button> */}
+
             <Button
               variant="ghost"
               size="sm"

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Users, FolderOpen, Calendar, MessageSquare } from "lucide-react";
+import { Home, Users, FolderOpen, Calendar, Settings } from "lucide-react";
 import { cn } from "../../lib/utils";
 
 const navItems = [
@@ -17,19 +17,14 @@ const navItems = [
     icon: FolderOpen,
   },
   {
-    label: "Friends",
-    href: "/friends",
-    icon: Users,
-  },
-  {
     label: "Calendar",
     href: "/calendar",
     icon: Calendar,
   },
   {
-    label: "Messages",
-    href: "/messages",
-    icon: MessageSquare,
+    label: "Settings",
+    href: "/settings",
+    icon: Settings,
   },
 ];
 

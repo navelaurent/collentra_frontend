@@ -80,8 +80,8 @@ export default function CalendarPage() {
 
   return (
     <MainLayout>
-      <div className="space-y-8 p-4 sm:p-6 lg:p-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col h-[calc(100vh-80px)] p-4 sm:p-6 lg:p-8 gap-4 overflow-hidden">
+        <div className="flex-none flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-foreground">Calendar</h1>
             <p className="text-muted-foreground mt-1">
@@ -90,17 +90,17 @@ export default function CalendarPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <Card className="lg:col-span-2 p-6">
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3 flex-1 min-h-0">
+          <Card className="lg:col-span-2 p-4 lg:p-6 flex flex-col h-full">
+            <div className="flex flex-col h-full gap-4">
+              <div className="flex items-center justify-between flex-none">
                 <div className="flex flex-col">
                   <h2 className="text-xl font-bold text-foreground">
                     {monthName} {year}
                   </h2>
                   <span className="text-xs text-primary font-medium">
                     Today:{" "}
-                    {today.toLocaleDateString("id-ID", { dateStyle: "full" })}
+                    {today.toLocaleDateString("en-EN", { dateStyle: "full" })}
                   </span>
                 </div>
                 <div className="flex gap-2">
@@ -123,22 +123,22 @@ export default function CalendarPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-7 gap-2">
+              <div className="grid grid-cols-7 gap-2 flex-none">
                 {weekDays.map((day) => (
                   <div
                     key={day}
-                    className="text-center font-bold text-xs uppercase tracking-wider text-muted-foreground py-2"
+                    className="text-center font-bold text-xs uppercase tracking-wider text-muted-foreground py-1"
                   >
                     {day}
                   </div>
                 ))}
               </div>
 
-              <div className="grid grid-cols-7 gap-2">
+              <div className="grid grid-cols-7 gap-1 lg:gap-2 flex-1 min-h-0">
                 {Array.from({ length: firstDayOfMonth }).map((_, i) => (
                   <div
                     key={`empty-${i}`}
-                    className="aspect-square bg-muted/10 rounded-lg"
+                    className="h-full w-full bg-muted/10 rounded-lg min-h-[40px]"
                   />
                 ))}
 
@@ -155,7 +155,7 @@ export default function CalendarPage() {
                     <button
                       key={day}
                       onClick={() => setSelectedDay(isSelected ? null : day)}
-                      className={`relative aspect-square p-2 rounded-lg border transition-all text-sm font-medium flex flex-col items-start justify-between
+                      className={`relative h-full w-full min-h-[40px] p-1.5 lg:p-2 rounded-lg border transition-all text-sm font-medium flex flex-col items-start justify-between
                         ${isToday ? "border-primary ring-2 ring-primary/20 ring-offset-2" : "border-border"}
                         ${isSelected ? "bg-primary text-primary-foreground border-primary" : dayEvents.length > 0 ? "bg-primary/5 hover:bg-primary/10" : "hover:border-primary/50"}
                       `}
@@ -191,8 +191,8 @@ export default function CalendarPage() {
             </div>
           </Card>
 
-          <Card className="p-6 h-fit">
-            <div className="flex items-center justify-between mb-6">
+          <Card className="p-4 lg:p-6 flex flex-col h-full overflow-hidden">
+            <div className="flex items-center justify-between mb-4 flex-none">
               <div className="flex flex-col gap-1">
                 <h3 className="font-bold text-foreground">
                   {selectedDay
@@ -211,7 +211,7 @@ export default function CalendarPage() {
               <Badge variant="outline">{filteredEvents.length}</Badge>
             </div>
 
-            <div className="space-y-4 max-h-[600px] overflow-y-auto pr-2 custom-scrollbar">
+            <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4 min-h-0">
               {loading ? (
                 <div className="flex flex-col items-center justify-center py-20 gap-3">
                   <Loader2 className="h-10 w-10 text-primary animate-spin" />
@@ -279,7 +279,7 @@ export default function CalendarPage() {
                           <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-tight italic">
                             Group : {event.groupName}
                           </span>
-                          {event.completedAt && (
+                          {event.stats == "Done" && (
                             <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
                           )}
                         </div>

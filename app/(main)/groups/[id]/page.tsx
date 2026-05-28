@@ -193,7 +193,7 @@ export default function GroupDetailPage({
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="tasks">Tasks</TabsTrigger>
             <TabsTrigger value="members">Members</TabsTrigger>
-            <TabsTrigger value="progress">Shared Documents</TabsTrigger>
+            <TabsTrigger value="progress">Shared Works</TabsTrigger>
           </TabsList>
 
           <TabsContent value="tasks" className="space-y-4">
@@ -402,36 +402,37 @@ export default function GroupDetailPage({
                         />
                       </div>
 
-                      {user?.sid == groupDetail.groupOwnerId && (
-                        <>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                              >
-                                <MoreVertical className="h-4 w-4" />
-                                <span className="sr-only">Open menu</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-40">
-                              <DropdownMenuItem
-                                className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
-                                onClick={() => {
-                                  setSelectedMember({
-                                    kickedId: member.id,
-                                  });
-                                  setIsKickOpen(true);
-                                }}
-                              >
-                                <UserMinus className="mr-2 h-4 w-4" />
-                                Kick Member
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </>
-                      )}
+                      {user?.sid == groupDetail.groupOwnerId &&
+                        user?.sid != member.id && (
+                          <>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                >
+                                  <MoreVertical className="h-4 w-4" />
+                                  <span className="sr-only">Open menu</span>
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-40">
+                                <DropdownMenuItem
+                                  className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
+                                  onClick={() => {
+                                    setSelectedMember({
+                                      kickedId: member.id,
+                                    });
+                                    setIsKickOpen(true);
+                                  }}
+                                >
+                                  <UserMinus className="mr-2 h-4 w-4" />
+                                  Kick Member
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </>
+                        )}
                     </div>
                   </div>
                 ))}
