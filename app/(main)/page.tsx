@@ -16,7 +16,7 @@ export default function Home() {
             <h1 className="text-3xl font-bold text-foreground">
               Welcome back, {user ? user.name : "name"}!
             </h1>
-            <p className="text-muted-foreground mt-1">Geda gedi geda geda</p>
+            <p className="text-muted-foreground mt-1">Welcome to collentra</p>
           </div>
           <div className="flex gap-2"></div>
         </div>

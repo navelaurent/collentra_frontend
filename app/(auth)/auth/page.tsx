@@ -54,7 +54,7 @@ const AuthPage = () => {
       const endpoint = isLogin ? "/Auth/login" : "/Auth/register";
 
       if (!formData.tokenCaptcha) {
-        showAlert("Silahkan centang captcha terlebih dahulu!", "error");
+        showAlert("Please Checklist the captcha first !", "error");
         return;
       }
 
@@ -68,8 +68,6 @@ const AuthPage = () => {
 
       const response = await api.post(endpoint, payload);
 
-      // console.log(response);
-
       if (response.data.status) {
         if (response.data.token) {
           Cookies.set("token", response.data.token, { expires: 1, path: "/" });
@@ -77,13 +75,13 @@ const AuthPage = () => {
 
         showAlert(
           isLogin
-            ? "Login Berhasil! Mengalihkan ke Dashboard..."
-            : "Registrasi Berhasil! Silakan Login dengan akun baru Anda.",
+            ? "Redirect to your dashboard..."
+            : "Register Success ! Please Login with your new account",
           "success",
         );
 
         if (isLogin) {
-          setTimeout(() => router.push("/"), 2000);
+          setTimeout(() => router.push("/"), 1000);
         } else {
           setFormData({
             username: "",
@@ -102,7 +100,7 @@ const AuthPage = () => {
     } catch (error: any) {
       recaptchaRef.current?.reset();
       const errorMsg =
-        error.response?.data?.message || "Terjadi kesalahan koneksi ke server";
+        error.response?.data?.message || "Failed connected to server !";
       showAlert(errorMsg, "error");
     } finally {
       setIsLoading(false);
@@ -118,12 +116,12 @@ const AuthPage = () => {
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl">
           <div className="text-center mb-10">
             <h1 className="text-3xl font-bold mb-2">
-              {isLogin ? "Selamat Datang" : "Buat Akun"}
+              {isLogin ? "Welcome" : "Create Account"}
             </h1>
             <p className="text-gray-400">
               {isLogin
-                ? "Silakan masuk ke akun Anda"
-                : "Daftar untuk mulai eksplorasi"}
+                ? "Login to your Account !"
+                : "Register to explore Collentra !"}
             </p>
           </div>
 
@@ -271,7 +269,7 @@ const AuthPage = () => {
                 <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
                 <>
-                  {isLogin ? "Masuk Sekarang" : "Daftar Akun"}
+                  {isLogin ? "Login Now!" : "Register your account"}
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </>
               )}
@@ -280,7 +278,9 @@ const AuthPage = () => {
 
           <div className="mt-8 text-center">
             <p className="text-sm text-gray-400">
-              {isLogin ? "Belum punya akun? " : "Sudah punya akun? "}
+              {isLogin
+                ? "don't have an account ? "
+                : "already have an account ? "}
               <button
                 onClick={() => setIsLogin(!isLogin)}
                 className={`font-bold transition-all duration-300 ${
@@ -289,7 +289,7 @@ const AuthPage = () => {
                     : "text-purple-400 hover:text-purple-300 hover:drop-shadow-[0_0_8px_rgba(192,132,252,0.6)]"
                 }`}
               >
-                {isLogin ? "Daftar" : "Login"}
+                {isLogin ? "Register" : "Login"}
               </button>
             </p>
           </div>
