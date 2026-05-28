@@ -63,12 +63,6 @@ export function Navigation() {
                     My Profile
                   </Link>
                 </DropdownMenuItem>
-                {/* <DropdownMenuItem asChild>
-                  <Link href="/settings" className="gap-2">
-                    <Settings className="h-4 w-4" />
-                    Settings
-                  </Link>
-                </DropdownMenuItem> */}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   className="text-destructive gap-2 cursor-pointer"
@@ -139,7 +133,6 @@ export function Navigation() {
         )}
       </nav>
 
-      {/* --- MANUAL ULTRA SMOOTH MODAL --- */}
       <LogoutModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

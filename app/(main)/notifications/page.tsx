@@ -208,7 +208,6 @@ export default function NotificationsPage() {
                             {notification.timestamp}
                           </span>
 
-                          {/* Slot Countdown Expired */}
                           <span className="text-[11px] font-medium text-destructive whitespace-nowrap bg-destructive/10 px-2 py-0.5 rounded-md font-mono animate-pulse">
                             {notification.expiredCountdown}
                           </span>

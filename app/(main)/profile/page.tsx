@@ -65,7 +65,6 @@ export default function ProfilePage() {
   return (
     <MainLayout>
       <div className="space-y-8 p-4 sm:p-6 lg:p-8">
-        {/* Profile Header */}
         <Card className="p-6 sm:p-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
             <div className="relative">
@@ -110,7 +109,6 @@ export default function ProfilePage() {
           </div>
         </Card>
 
-        {/* Profile Content */}
         <Tabs defaultValue="about" className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="about">About</TabsTrigger>
@@ -118,7 +116,6 @@ export default function ProfilePage() {
             <TabsTrigger value="ratings">Ratings</TabsTrigger>
           </TabsList>
 
-          {/* About Tab */}
           <TabsContent value="about" className="space-y-4">
             <Card className="p-6">
               <h3 className="font-semibold text-foreground mb-4">
@@ -198,7 +195,6 @@ export default function ProfilePage() {
             </Card>
           </TabsContent>
 
-          {/* Achievements Tab */}
           <TabsContent value="achievements" className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {mockAchievements.map((achievement) => {
@@ -222,7 +218,6 @@ export default function ProfilePage() {
             </div>
           </TabsContent>
 
-          {/* Ratings Tab */}
           <TabsContent value="ratings" className="space-y-4">
             <Card className="p-6">
               <h3 className="font-semibold text-foreground mb-4">
