@@ -38,8 +38,8 @@ export const AddTaskModal = ({
     groupId: groupId,
     title: "",
     assigneeId: "",
-    status: "todo",
-    priority: "medium",
+    status: "Todo",
+    priority: "Medium",
     dueDate: "",
     description: "",
   });
@@ -66,8 +66,8 @@ export const AddTaskModal = ({
         groupId: groupId,
         title: "",
         assigneeId: "",
-        status: "todo",
-        priority: "medium",
+        status: "Todo",
+        priority: "Medium",
         dueDate: "",
         description: "",
       });
@@ -129,7 +129,7 @@ export const AddTaskModal = ({
           </div>
         </div>
 
-        <div className="space-y-2">
+        {/* <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Status</label>
           <Select
             defaultValue="todo"
@@ -145,7 +145,7 @@ export const AddTaskModal = ({
               <SelectItem value="Done">Done</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </div> */}
 
         <div className="space-y-2">
           <label className="text-sm font-medium text-gray-300">Priority</label>

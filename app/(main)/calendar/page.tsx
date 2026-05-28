@@ -261,10 +261,14 @@ export default function CalendarPage() {
                           </div>
                           <Badge
                             variant="secondary"
-                            className={`text-[10px] px-1.5 py-0 shrink-0 ${
-                              event.priority === "Critical"
-                                ? "bg-destructive/10 text-destructive border-destructive/20"
-                                : "bg-primary/10 text-primary border-primary/20"
+                            className={`text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider rounded ${
+                              event.priority?.toLowerCase() === "critical"
+                                ? "bg-red-500/10 text-red-400 border-red-500/30"
+                                : event.priority?.toLowerCase() === "high"
+                                  ? "bg-orange-500/10 text-orange-400 border-orange-500/30"
+                                  : event.priority?.toLowerCase() === "medium"
+                                    ? "bg-blue-500/10 text-blue-400 border-blue-500/30"
+                                    : "bg-slate-500/10 text-slate-400 border-slate-500/20"
                             }`}
                           >
                             {event.priority}

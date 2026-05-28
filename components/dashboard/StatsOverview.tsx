@@ -10,7 +10,7 @@ const statsTemplate = [
   {
     key: "groupCount",
     label: "Active Groups",
-    description: "Groups you're managing",
+    description: "Groups you're joining",
     icon: FolderOpen,
     color: "from-primary to-accent",
   },
