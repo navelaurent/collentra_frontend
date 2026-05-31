@@ -39,6 +39,14 @@ import {
 import { KickMemberModal } from "@/components/ui/modal/group/kickMemberModal";
 import { EditTaskModal } from "@/components/ui/modal/group/editTaskModal";
 import { ActionModal } from "@/components/ui/modal/ActionModal";
+import { RateUserModal } from "@/components/ui/modal/group/RateUserModal";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function GroupDetailPage({
   params,
@@ -48,21 +56,30 @@ export default function GroupDetailPage({
   const user = getUserInfo();
   const unwrappedParams = React.use(params);
   const id = unwrappedParams.id;
-  const { showAlert } = useAlert();
-  const [groupDetail, setGroupDetail] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const { showAlert } = useAlert();
+
+  const [groupDetail, setGroupDetail] = useState<any>(null);
+  const [selectedTask, setSelectedTask] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState("tasks");
+  const [taskFilter, setTaskFilter] = useState<"all" | "mine">("all");
+  const [selectedMember, setSelectedMember] = useState<{
+    kickedId: string;
+  } | null>(null);
+  const [selectedRating, setSelectedselectedRating] = useState<{
+    TargetId: string;
+    TargetName: string;
+    TargetEmail: string;
+  } | null>(null);
+
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [isEditGroupOpen, setIsEditGroupOpen] = useState(false);
   const [isTaskOpen, setIsTaskOpen] = useState(false);
   const [isKickOpen, setIsKickOpen] = useState(false);
-  const [selectedMember, setSelectedMember] = useState<{
-    kickedId: string;
-  } | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedTask, setSelectedTask] = useState<any>(null);
   const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
   const [isTerminateModalOpen, setIsTerminateModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("tasks");
+  const [isRatingOpen, setIsRatingOpen] = useState(false);
 
   const fetchGroupDetail = async () => {
     setIsLoading(true);
@@ -198,138 +215,184 @@ export default function GroupDetailPage({
 
           <TabsContent value="tasks" className="space-y-4">
             <Card className="p-6">
-              <h3 className="font-semibold text-foreground mb-4">Tasks</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold text-foreground">Tasks</h3>
+
+                <Select
+                  value={taskFilter}
+                  onValueChange={(value) =>
+                    setTaskFilter(value as "all" | "mine")
+                  }
+                >
+                  <SelectTrigger className="w-[140px] text-xs bg-white/5 border-white/10 text-white">
+                    <SelectValue placeholder="Filter Tasks" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-[#1e293b] border-white/10 text-white">
+                    <SelectItem value="all" className="text-xs cursor-pointer">
+                      All Tasks
+                    </SelectItem>
+                    <SelectItem value="mine" className="text-xs cursor-pointer">
+                      Only My Tasks
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
               <div className="space-y-3">
-                {groupDetail.tasks?.map((task: any) => (
-                  <div
-                    key={task.id}
-                    className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex flex-1 flex-col md:flex-row md:items-center justify-between gap-4">
-                      <div className="flex-1 min-w-0 space-y-1.5">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-semibold text-sm md:text-base text-foreground tracking-tight truncate">
-                            {task.name}
-                          </p>
+                {(() => {
+                  const filteredTasks =
+                    groupDetail.tasks?.filter((task: any) => {
+                      if (taskFilter === "mine") {
+                        return task.assigneeId === user?.sid;
+                      }
+                      return true;
+                    }) || [];
 
-                          <Badge
-                            variant="outline"
-                            className={`text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider rounded ${
-                              task.priority?.toLowerCase() === "critical"
-                                ? "bg-red-500/10 text-red-400 border-red-500/30"
-                                : task.priority?.toLowerCase() === "high"
-                                  ? "bg-orange-500/10 text-orange-400 border-orange-500/30"
-                                  : task.priority?.toLowerCase() === "medium"
-                                    ? "bg-blue-500/10 text-blue-400 border-blue-500/30"
-                                    : "bg-slate-500/10 text-slate-400 border-slate-500/20"
-                            }`}
-                          >
-                            {task.priority}
-                          </Badge>
-                        </div>
+                  return filteredTasks.length > 0 ? (
+                    filteredTasks.map((task: any) => (
+                      <div
+                        key={task.id}
+                        className="flex items-center justify-between p-3 rounded-lg border border-border hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="flex flex-1 flex-col md:flex-row md:items-center justify-between gap-4">
+                          <div className="flex-1 min-w-0 space-y-1.5">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="font-semibold text-sm md:text-base text-foreground tracking-tight truncate">
+                                {task.name}
+                              </p>
 
-                        {task.description && (
-                          <p className="text-xs text-muted-foreground/80 line-clamp-2 max-w-xl bg-black/10 p-2 rounded border border-white/5">
-                            {task.description}
-                          </p>
-                        )}
+                              <Badge
+                                variant="outline"
+                                className={`text-[10px] font-bold px-2 py-0.5 uppercase tracking-wider rounded ${
+                                  task.priority?.toLowerCase() === "critical"
+                                    ? "bg-red-500/10 text-red-400 border-red-500/30"
+                                    : task.priority?.toLowerCase() === "high"
+                                      ? "bg-orange-500/10 text-orange-400 border-orange-500/30"
+                                      : task.priority?.toLowerCase() ===
+                                          "medium"
+                                        ? "bg-blue-500/10 text-blue-400 border-blue-500/30"
+                                        : "bg-slate-500/10 text-slate-400 border-slate-500/20"
+                                }`}
+                              >
+                                {task.priority}
+                              </Badge>
+                            </div>
 
-                        <div className="flex flex-wrap items-center gap-3 text-xs pt-1">
-                          <div className="flex items-center gap-1.5 text-muted-foreground">
-                            <span className="text-[11px]">Assigned To:</span>
-                            <Badge
-                              variant="secondary"
-                              className="text-[11px] font-medium px-2 py-0 bg-white/5 text-gray-300"
-                            >
-                              {task.assignee || "Unassigned"}
-                            </Badge>
+                            {task.description && (
+                              <p className="text-xs text-muted-foreground/80 line-clamp-2 max-w-xl bg-black/10 p-2 rounded border border-white/5">
+                                {task.description}
+                              </p>
+                            )}
+
+                            <div className="flex flex-wrap items-center gap-3 text-xs pt-1">
+                              <div className="flex items-center gap-1.5 text-muted-foreground">
+                                <span className="text-[11px]">
+                                  Assigned To:
+                                </span>
+                                <Badge
+                                  variant="secondary"
+                                  className="text-[11px] font-medium px-2 py-0 bg-white/5 text-gray-300"
+                                >
+                                  {task.assignee || "Unassigned"}
+                                </Badge>
+                              </div>
+
+                              {task.dueDate && (
+                                <div className="flex items-center gap-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded text-[11px] font-medium">
+                                  <Calendar className="h-3 w-3" />
+                                  <span>Due: {task.dueDate.split("T")[0]}</span>
+                                </div>
+                              )}
+                            </div>
                           </div>
 
-                          {task.dueDate && (
-                            <div className="flex items-center gap-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2 py-0.5 rounded text-[11px] font-medium">
-                              <Calendar className="h-3 w-3" />
-                              <span>Due: {task.dueDate.split("T")[0]}</span>
-                            </div>
-                          )}
+                          <div className="flex items-center gap-2 self-start md:self-center">
+                            <Badge
+                              variant="secondary"
+                              className={`text-xs px-3 py-1 font-medium capitalize tracking-wide rounded-full ${
+                                task.status?.toLowerCase() === "done"
+                                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                                  : task.status?.toLowerCase() === "inreview"
+                                    ? "bg-purple-500/10 text-purple-400 border border-purple-500/20"
+                                    : task.status?.toLowerCase() ===
+                                        "inprogress"
+                                      ? "bg-sky-500/10 text-sky-400 border border-sky-500/20"
+                                      : task.status?.toLowerCase() ===
+                                          "terminate"
+                                        ? "bg-red-500/10 text-red-400 border border-red-500/20"
+                                        : "bg-zinc-500/10 text-zinc-400 border border-zinc-500/20"
+                              }`}
+                            >
+                              {task.status === "inprogress"
+                                ? "In Progress"
+                                : task.status === "inreview"
+                                  ? "In Review"
+                                  : task.status}
+                            </Badge>
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="flex items-center gap-2 self-start md:self-center">
-                        <Badge
-                          variant="secondary"
-                          className={`text-xs px-3 py-1 font-medium capitalize tracking-wide rounded-full ${
-                            task.status?.toLowerCase() === "done"
-                              ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
-                              : task.status?.toLowerCase() === "inreview"
-                                ? "bg-purple-500/10 text-purple-400 border border-purple-500/20"
-                                : task.status?.toLowerCase() === "inprogress"
-                                  ? "bg-sky-500/10 text-sky-400 border border-sky-500/20"
-                                  : task.status?.toLowerCase() === "terminate"
-                                    ? "bg-red-500/10 text-red-400 border border-red-500/20"
-                                    : "bg-zinc-500/10 text-zinc-400 border border-zinc-500/20"
-                          }`}
-                        >
-                          {task.status === "inprogress"
-                            ? "In Progress"
-                            : task.status === "inreview"
-                              ? "In Review"
-                              : task.status}
-                        </Badge>
+                        {user?.sid == groupDetail.groupOwnerId &&
+                          task?.status?.toLowerCase() !== "done" &&
+                          task?.status?.toLowerCase() !== "terminate" && (
+                            <>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                                  >
+                                    <MoreVertical className="h-4 w-4" />
+                                    <span className="sr-only">Open menu</span>
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                  align="end"
+                                  className="w-40"
+                                >
+                                  <DropdownMenuItem
+                                    className="cursor-pointer text-yellow-400 focus:text-yellow-400 focus:bg-yellow-500/10"
+                                    onClick={() => {
+                                      setSelectedTask(task);
+                                      setIsEditModalOpen(true);
+                                    }}
+                                  >
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    Edit Task
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className="cursor-pointer text-green-400 focus:text-green-400 focus:bg-green-500/10"
+                                    onClick={() => {
+                                      setSelectedTask(task.id);
+                                      setIsCompleteModalOpen(true);
+                                    }}
+                                  >
+                                    <CheckCircle className="mr-2 h-4 w-4" />
+                                    Complete Task
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    className="cursor-pointer text-red-400 focus:text-red-400 focus:bg-red-500/10"
+                                    onClick={() => {
+                                      setSelectedTask(task.id);
+                                      setIsTerminateModalOpen(true);
+                                    }}
+                                  >
+                                    <XCircle className="mr-2 h-4 w-4" />
+                                    Terminate Task
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            </>
+                          )}
                       </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-6 border border-dashed rounded-lg text-muted-foreground text-sm">
+                      No task found
                     </div>
-
-                    {user?.sid == groupDetail.groupOwnerId &&
-                      task?.status?.toLowerCase() !== "done" &&
-                      task?.status?.toLowerCase() !== "terminate" && (
-                        <>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                              >
-                                <MoreVertical className="h-4 w-4" />
-                                <span className="sr-only">Open menu</span>
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-40">
-                              <DropdownMenuItem
-                                className="cursor-pointer text-yellow-400 focus:text-yellow-400 focus:bg-yellow-500/10"
-                                onClick={() => {
-                                  setSelectedTask(task);
-                                  setIsEditModalOpen(true);
-                                }}
-                              >
-                                <Edit className="mr-2 h-4 w-4" />
-                                Edit Task
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="cursor-pointer text-green-400 focus:text-green-400 focus:bg-green-500/10"
-                                onClick={() => {
-                                  setSelectedTask(task.id);
-                                  setIsCompleteModalOpen(true);
-                                }}
-                              >
-                                <CheckCircle className="mr-2 h-4 w-4" />
-                                Complete Task
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                className="cursor-pointer text-red-400 focus:text-red-400 focus:bg-red-500/10"
-                                onClick={() => {
-                                  setSelectedTask(task.id);
-                                  setIsTerminateModalOpen(true);
-                                }}
-                              >
-                                <XCircle className="mr-2 h-4 w-4" />
-                                Terminate Task
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </>
-                      )}
-                  </div>
-                ))}
+                  );
+                })()}
               </div>
             </Card>
           </TabsContent>
@@ -402,37 +465,59 @@ export default function GroupDetailPage({
                         />
                       </div>
 
-                      {user?.sid == groupDetail.groupOwnerId &&
-                        user?.sid != member.id && (
-                          <>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                                >
-                                  <MoreVertical className="h-4 w-4" />
-                                  <span className="sr-only">Open menu</span>
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-40">
-                                <DropdownMenuItem
-                                  className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
-                                  onClick={() => {
-                                    setSelectedMember({
-                                      kickedId: member.id,
-                                    });
-                                    setIsKickOpen(true);
-                                  }}
-                                >
-                                  <UserMinus className="mr-2 h-4 w-4" />
-                                  Kick Member
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </>
-                        )}
+                      {user?.sid != member.id && (
+                        <>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                              >
+                                <MoreVertical className="h-4 w-4" />
+                                <span className="sr-only">Open menu</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-40">
+                              {user?.sid == groupDetail.groupOwnerId &&
+                                user?.sid != member.id && (
+                                  <>
+                                    <DropdownMenuItem
+                                      className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
+                                      onClick={() => {
+                                        setSelectedMember({
+                                          kickedId: member.id,
+                                        });
+                                        setIsKickOpen(true);
+                                      }}
+                                    >
+                                      <UserMinus className="mr-2 h-4 w-4" />
+                                      Kick Member
+                                    </DropdownMenuItem>
+                                  </>
+                                )}
+                              {user?.sid != member.id && (
+                                <>
+                                  <DropdownMenuItem
+                                    className="text-yellow-500 focus:text-yellow-500 focus:bg-yellow-500/10 cursor-pointer"
+                                    onClick={() => {
+                                      setSelectedselectedRating({
+                                        TargetId: member.id,
+                                        TargetName: member.name,
+                                        TargetEmail: member.emailMember,
+                                      });
+                                      setIsRatingOpen(true);
+                                    }}
+                                  >
+                                    <Star className="mr-2 h-4 w-4" />
+                                    Rate Person
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -586,6 +671,28 @@ export default function GroupDetailPage({
           </TabsContent>
         </Tabs>
       </div>
+
+      {user?.sid != selectedRating?.TargetId && (
+        <>
+          <RateUserModal
+            isOpen={isRatingOpen}
+            onClose={() => setIsRatingOpen(false)}
+            groupId={id}
+            userId={user?.sid}
+            targetUserId={selectedRating?.TargetId}
+            groupName={groupDetail.groupName}
+            targetUserName={selectedRating?.TargetName}
+            targetUserEmail={selectedRating?.TargetEmail}
+            onSuccess={(msg: any) => {
+              showAlert(msg, "success");
+              fetchGroupDetail();
+            }}
+            onFailed={(msg: any) => {
+              showAlert(msg, "error");
+            }}
+          />
+        </>
+      )}
 
       {user?.sid == groupDetail.groupOwnerId && (
         <>
