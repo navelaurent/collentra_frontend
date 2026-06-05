@@ -11,10 +11,6 @@ import {
   Edit,
   Plus,
   UserPlus,
-  FileText,
-  Download,
-  Paperclip,
-  Send,
   MoreVertical,
   UserMinus,
   Calendar,
@@ -47,6 +43,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { SharedDocumentsTab } from "@/components/groups/sharedDocumentTab";
 
 export default function GroupDetailPage({
   params,
@@ -112,7 +109,7 @@ export default function GroupDetailPage({
         });
       }
     } catch (error: any) {
-      showAlert(error.response?.data?.message || "Gagal memuat data", "error");
+      showAlert(error.response?.data?.message || "Failed Load Data", "error");
     } finally {
       setIsLoading(false);
     }
@@ -526,148 +523,7 @@ export default function GroupDetailPage({
           </TabsContent>
 
           <TabsContent value="progress" className="space-y-4">
-            <Card className="p-0 flex flex-col h-[500px] overflow-hidden">
-              <div className="p-4 border-b border-border bg-muted/30">
-                <h3 className="font-semibold text-foreground">
-                  Shared Documents
-                </h3>
-                <p className="text-xs text-muted-foreground">
-                  Share and download group files
-                </p>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {[
-                  {
-                    id: 1,
-                    senderId: "user-1",
-                    senderName: "Budi Utomo",
-                    fileName: "Requirements.pdf",
-                    size: "2.4 MB",
-                    time: "10:30 AM",
-                  },
-                  {
-                    id: 2,
-                    senderId: user?.sid,
-                    senderName: "Agra Radhitya",
-                    fileName: "Design_Assets.zip",
-                    size: "15.1 MB",
-                    time: "11:05 AM",
-                  },
-                  {
-                    id: 3,
-                    senderId: "user-2",
-                    senderName: "Siti Aminah",
-                    fileName: "Database_Schema.sql",
-                    size: "124 KB",
-                    time: "13:15 PM",
-                  },
-                ].map((chat) => {
-                  const isMine = chat.senderId === user?.sid;
-                  const initial = chat.senderName
-                    ? chat.senderName.charAt(0).toUpperCase()
-                    : "?";
-
-                  return (
-                    <div
-                      key={chat.id}
-                      className={`flex items-start gap-3 ${isMine ? "justify-end" : "justify-start"}`}
-                    >
-                      {!isMine && (
-                        <Avatar className="h-8 w-8 shrink-0 mt-5">
-                          <AvatarFallback className="bg-muted-foreground/20 text-foreground text-xs font-semibold">
-                            {initial}
-                          </AvatarFallback>
-                        </Avatar>
-                      )}
-
-                      <div
-                        className={`flex flex-col max-w-[85%] sm:max-w-[70%] ${isMine ? "items-end" : "items-start"}`}
-                      >
-                        <span className="text-xs text-muted-foreground mb-1 px-1">
-                          {isMine ? "You" : chat.senderName}
-                        </span>
-
-                        <div
-                          className={`p-3 rounded-2xl flex items-center gap-3 ${
-                            isMine
-                              ? "bg-primary text-primary-foreground rounded-tr-sm"
-                              : "bg-muted text-foreground rounded-tl-sm"
-                          }`}
-                        >
-                          <div
-                            className={`p-2 rounded-lg flex-shrink-0 ${
-                              isMine
-                                ? "bg-primary-foreground/20"
-                                : "bg-background"
-                            }`}
-                          >
-                            <FileText className="h-5 w-5" />
-                          </div>
-
-                          <div className="flex flex-col overflow-hidden pr-2">
-                            <span className="font-medium text-sm truncate max-w-[120px] sm:max-w-[200px]">
-                              {chat.fileName}
-                            </span>
-                            <span className="text-[11px] opacity-70 mt-0.5">
-                              {chat.size} • {chat.time}
-                            </span>
-                          </div>
-
-                          <Button
-                            variant={isMine ? "secondary" : "outline"}
-                            size="icon"
-                            className={`h-8 w-8 rounded-full shrink-0 ${isMine ? "hover:bg-primary-foreground/20" : ""}`}
-                            onClick={() =>
-                              console.log("Download", chat.fileName)
-                            }
-                          >
-                            <Download className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-
-                      {isMine && (
-                        <Avatar className="h-8 w-8 shrink-0 mt-5">
-                          <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
-                            {initial}
-                          </AvatarFallback>
-                        </Avatar>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              <div className="p-4 border-t border-border bg-card shadow-sm z-10">
-                <div className="flex items-center gap-2">
-                  <input
-                    type="file"
-                    className="hidden"
-                    id="file-upload"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) console.log("File selected:", file.name);
-                    }}
-                  />
-                  <label
-                    htmlFor="file-upload"
-                    className="flex-1 cursor-pointer"
-                  >
-                    <div className="flex items-center gap-2 w-full px-4 py-2.5 border rounded-lg hover:bg-muted/80 transition-colors border-dashed border-muted-foreground/40 bg-muted/50">
-                      <Paperclip className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <span className="text-sm text-muted-foreground truncate">
-                        Select a document to share...
-                      </span>
-                    </div>
-                  </label>
-                  <button className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 has-[>svg]:px-3 gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500">
-                    <Send className="h-4 w-4" />
-                    <span className="hidden sm:inline">Send</span>
-                  </button>
-                </div>
-              </div>
-            </Card>
+            <SharedDocumentsTab groupId={id} user={user} />
           </TabsContent>
         </Tabs>
       </div>
