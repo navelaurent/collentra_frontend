@@ -19,6 +19,7 @@ import {
   Star,
   Power,
   Play,
+  ShieldCheck,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import api from "@/lib/axios";
@@ -33,7 +34,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { KickMemberModal } from "@/components/ui/modal/group/kickMemberModal";
+import { ManageMemberModal } from "@/components/ui/modal/group/ManageMemberModal";
 import { EditTaskModal } from "@/components/ui/modal/group/editTaskModal";
 import { ActionModal } from "@/components/ui/modal/ActionModal";
 import { RateUserModal } from "@/components/ui/modal/group/RateUserModal";
@@ -79,6 +80,7 @@ export default function GroupDetailPage({
   const [isTerminateModalOpen, setIsTerminateModalOpen] = useState(false);
   const [isRatingOpen, setIsRatingOpen] = useState(false);
   const [isDoTaskOpen, setIsDoTaskOpen] = useState(false);
+  const [isPromoteOpen, setIsPromoteOpen] = useState(false);
 
   const fetchGroupDetail = async () => {
     setIsLoading(true);
@@ -525,6 +527,19 @@ export default function GroupDetailPage({
                                       <UserMinus className="mr-2 h-4 w-4" />
                                       Kick Member
                                     </DropdownMenuItem>
+
+                                    <DropdownMenuItem
+                                      className="text-indigo-500 focus:text-indigo-500 focus:bg-indigo-500/10 cursor-pointer"
+                                      onClick={() => {
+                                        setSelectedMember({
+                                          kickedId: member.id,
+                                        });
+                                        setIsPromoteOpen(true);
+                                      }}
+                                    >
+                                      <ShieldCheck className="mr-2 h-4 w-4" />
+                                      Make Admin
+                                    </DropdownMenuItem>
                                   </>
                                 )}
                               {user?.sid != member.id && (
@@ -659,12 +674,29 @@ export default function GroupDetailPage({
             }}
           />
 
-          <KickMemberModal
+          <ManageMemberModal
             isOpen={isKickOpen}
             onClose={() => setIsKickOpen(false)}
             groupId={id}
             ownerId={groupDetail.groupOwnerId}
-            kickedId={selectedMember?.kickedId || ""}
+            targetMemberId={selectedMember?.kickedId || ""}
+            actionType="kick"
+            onSuccess={(msg: any) => {
+              showAlert(msg, "success");
+              fetchGroupDetail();
+            }}
+            onFailed={(msg: any) => {
+              showAlert(msg, "error");
+            }}
+          />
+
+          <ManageMemberModal
+            isOpen={isPromoteOpen}
+            onClose={() => setIsPromoteOpen(false)}
+            groupId={id}
+            ownerId={groupDetail.groupOwnerId}
+            targetMemberId={selectedMember?.kickedId || ""}
+            actionType="promote"
             onSuccess={(msg: any) => {
               showAlert(msg, "success");
               fetchGroupDetail();

@@ -87,7 +87,7 @@ export default function GroupsPage() {
           </div>
           <Button
             onClick={() => setIsModalOpen(true)}
-            className="gap-2 w-full sm:w-auto"
+            className="gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500"
           >
             <Plus className="h-4 w-4" />
             Create Group
