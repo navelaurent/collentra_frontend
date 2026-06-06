@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import {
   ChevronLeft,
   ChevronRight,
-  Calendar as CalendarIcon,
   Clock,
   CheckCircle2,
   X,
@@ -76,7 +75,6 @@ export default function CalendarPage() {
 
   const filteredEvents = selectedDay ? getDayEvents(selectedDay) : events;
 
-  // Menghitung hanya task yang belum selesai dan belum dihapus
   const activeTasksCount = filteredEvents.filter(
     (ev) => !ev.isDeleted && ev.stats !== "Done",
   ).length;
@@ -175,7 +173,6 @@ export default function CalendarPage() {
                         <div className="w-full mt-auto">
                           <div className="flex gap-1">
                             {dayEvents.slice(0, 3).map((ev, idx) => {
-                              // Menyesuaikan warna titik kalender berdasarkan priority
                               let dotColor = "bg-slate-500";
                               const prio = ev.priority?.toLowerCase();
                               if (prio === "critical") dotColor = "bg-red-500";
@@ -232,7 +229,7 @@ export default function CalendarPage() {
                 <div className="flex flex-col items-center justify-center py-20 gap-3">
                   <Loader2 className="h-10 w-10 text-primary animate-spin" />
                   <p className="text-sm text-muted-foreground animate-pulse">
-                    Memuat jadwal...
+                    Loading Schedule...
                   </p>
                 </div>
               ) : filteredEvents.length === 0 ? (
@@ -243,11 +240,19 @@ export default function CalendarPage() {
                 </div>
               ) : (
                 filteredEvents
-                  .sort(
-                    (a, b) =>
+                  .sort((a, b) => {
+                    const aDone = a.stats === "Done" ? 1 : 0;
+                    const bDone = b.stats === "Done" ? 1 : 0;
+
+                    if (aDone !== bDone) {
+                      return aDone - bDone;
+                    }
+
+                    return (
                       new Date(a.dueDate).getTime() -
-                      new Date(b.dueDate).getTime(),
-                  )
+                      new Date(b.dueDate).getTime()
+                    );
+                  })
                   .map((event) => (
                     <div
                       key={event.id}
