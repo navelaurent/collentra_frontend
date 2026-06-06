@@ -28,13 +28,6 @@ const statsTemplate = [
     icon: Clock,
     color: "from-amber-500 to-orange-500",
   },
-  {
-    key: "teamPerformance",
-    label: "Team Performance",
-    description: "Average completion rate",
-    icon: TrendingUp,
-    color: "from-blue-500 to-indigo-500",
-  },
 ];
 
 export function StatsOverview() {
@@ -61,7 +54,7 @@ export function StatsOverview() {
   }, []);
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
       {statsTemplate.map((stat) => {
         const Icon = stat.icon;
 

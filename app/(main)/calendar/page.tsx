@@ -76,6 +76,11 @@ export default function CalendarPage() {
 
   const filteredEvents = selectedDay ? getDayEvents(selectedDay) : events;
 
+  // Menghitung hanya task yang belum selesai dan belum dihapus
+  const activeTasksCount = filteredEvents.filter(
+    (ev) => !ev.isDeleted && ev.stats !== "Done",
+  ).length;
+
   const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   return (
@@ -169,12 +174,23 @@ export default function CalendarPage() {
                       {dayEvents.length > 0 && (
                         <div className="w-full mt-auto">
                           <div className="flex gap-1">
-                            {dayEvents.slice(0, 3).map((ev, idx) => (
-                              <div
-                                key={idx}
-                                className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : ev.priority === "Critical" ? "bg-destructive" : "bg-primary"}`}
-                              />
-                            ))}
+                            {dayEvents.slice(0, 3).map((ev, idx) => {
+                              // Menyesuaikan warna titik kalender berdasarkan priority
+                              let dotColor = "bg-slate-500";
+                              const prio = ev.priority?.toLowerCase();
+                              if (prio === "critical") dotColor = "bg-red-500";
+                              else if (prio === "high")
+                                dotColor = "bg-orange-500";
+                              else if (prio === "medium")
+                                dotColor = "bg-blue-500";
+
+                              return (
+                                <div
+                                  key={idx}
+                                  className={`h-1.5 w-1.5 rounded-full ${isSelected ? "bg-white" : dotColor}`}
+                                />
+                              );
+                            })}
                           </div>
                           <span
                             className={`text-[10px] block truncate ${isSelected ? "text-primary-foreground/80" : "text-muted-foreground"}`}
@@ -208,7 +224,7 @@ export default function CalendarPage() {
                   </button>
                 )}
               </div>
-              <Badge variant="outline">{filteredEvents.length}</Badge>
+              <Badge variant="outline">{activeTasksCount}</Badge>
             </div>
 
             <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar space-y-4 min-h-0">
@@ -235,7 +251,13 @@ export default function CalendarPage() {
                   .map((event) => (
                     <div
                       key={event.id}
-                      className="group p-3 rounded-xl border border-border hover:border-primary/50 hover:bg-muted/30 transition-all cursor-pointer"
+                      className={`group p-3 rounded-xl border transition-all cursor-pointer ${
+                        event.isDeleted
+                          ? "bg-red-500/10 border-red-500/30 hover:border-red-500/50"
+                          : event.stats === "Done"
+                            ? "bg-green-500/10 border-green-500/30 hover:border-green-500/50"
+                            : "border-border hover:border-primary/50 hover:bg-muted/30"
+                      }`}
                     >
                       <Link href={`/groups/${event.groupId}`}>
                         <div className="flex items-start justify-between gap-2">
@@ -279,7 +301,7 @@ export default function CalendarPage() {
                           <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-tight italic">
                             Group : {event.groupName}
                           </span>
-                          {event.stats == "Done" && (
+                          {event.stats === "Done" && (
                             <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
                           )}
                         </div>
