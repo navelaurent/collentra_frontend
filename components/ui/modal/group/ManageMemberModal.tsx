@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { UserX, ShieldCheck, Loader2 } from "lucide-react";
+import { UserX, ShieldCheck, Loader2, SquareArrowLeft } from "lucide-react";
 import api from "@/lib/axios";
 
-export type ManageMemberAction = "kick" | "promote";
+export type ManageMemberAction = "kick" | "promote" | "leave";
 
 interface ManageMemberModalProps {
   isOpen: boolean;
@@ -60,6 +60,17 @@ export function ManageMemberModal({
       btnClass:
         "bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/20",
       apiEndpoint: `/Group/promote-member/${groupId}`,
+      payload: { leaderId: ownerId, kickedMemberId: targetMemberId },
+    },
+    leave: {
+      title: "Leave Group",
+      desc: "Are you sure you want to leave this group? You will lose access to all group conversations, tasks, and data immediately.",
+      btnText: "Yes, Leave",
+      icon: <SquareArrowLeft className="h-7 w-7 text-destructive" />,
+      iconBgClass: "bg-destructive/10 ring-8 ring-destructive/5",
+      btnClass:
+        "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-lg shadow-destructive/20",
+      apiEndpoint: `/Group/leave-group/${groupId}`,
       payload: { leaderId: ownerId, kickedMemberId: targetMemberId },
     },
   };

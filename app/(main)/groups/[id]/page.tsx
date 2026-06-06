@@ -20,6 +20,7 @@ import {
   Power,
   Play,
   ShieldCheck,
+  SquareArrowLeft,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import api from "@/lib/axios";
@@ -81,6 +82,7 @@ export default function GroupDetailPage({
   const [isRatingOpen, setIsRatingOpen] = useState(false);
   const [isDoTaskOpen, setIsDoTaskOpen] = useState(false);
   const [isPromoteOpen, setIsPromoteOpen] = useState(false);
+  const [isLeaveGroupOpen, setIsLeaveGroupOpen] = useState(false);
 
   const fetchGroupDetail = async () => {
     setIsLoading(true);
@@ -146,9 +148,21 @@ export default function GroupDetailPage({
               {groupDetail.description}
             </p>
           </div>
-          {user?.sid == groupDetail.groupOwnerId && (
-            <>
-              <div className="flex gap-2">
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              className="gap-2 bg-gradient-to-r from-red-600 to-purple-600 hover:from-red-500 hover:to-purple-500"
+              onClick={() => {
+                setSelectedMember({
+                  kickedId: user?.sid,
+                });
+                setIsLeaveGroupOpen(true);
+              }}
+            >
+              <SquareArrowLeft className="h-4 w-4" /> Leave Group
+            </Button>
+            {user?.sid == groupDetail.groupOwnerId && (
+              <>
                 <Button
                   variant="outline"
                   className="gap-2"
@@ -169,9 +183,9 @@ export default function GroupDetailPage({
                 >
                   <Plus className="h-4 w-4" /> Add Task
                 </Button>
-              </div>
-            </>
-          )}
+              </>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
@@ -603,6 +617,22 @@ export default function GroupDetailPage({
         </>
       )}
 
+      <ManageMemberModal
+        isOpen={isLeaveGroupOpen}
+        onClose={() => setIsLeaveGroupOpen(false)}
+        groupId={id}
+        ownerId={groupDetail.groupOwnerId}
+        targetMemberId={selectedMember?.kickedId || ""}
+        actionType="leave"
+        onSuccess={(msg: any) => {
+          showAlert(msg, "success");
+          fetchGroupDetail();
+        }}
+        onFailed={(msg: any) => {
+          showAlert(msg, "error");
+        }}
+      />
+
       <ActionModal
         isOpen={isDoTaskOpen}
         onClose={() => setIsDoTaskOpen(false)}
@@ -645,7 +675,6 @@ export default function GroupDetailPage({
               showAlert(msg, "error");
             }}
           />
-
           <InviteMemberModal
             isOpen={isInviteOpen}
             onClose={() => setIsInviteOpen(false)}
@@ -658,7 +687,6 @@ export default function GroupDetailPage({
               showAlert(msg, "error");
             }}
           />
-
           <AddTaskModal
             isOpen={isTaskOpen}
             onClose={() => setIsTaskOpen(false)}
@@ -705,7 +733,6 @@ export default function GroupDetailPage({
               showAlert(msg, "error");
             }}
           />
-
           <EditTaskModal
             isOpen={isEditModalOpen}
             onClose={() => {
@@ -723,7 +750,6 @@ export default function GroupDetailPage({
               showAlert(msg, "error");
             }}
           />
-
           <ActionModal
             isOpen={isCompleteModalOpen}
             onClose={() => setIsCompleteModalOpen(false)}
@@ -748,7 +774,6 @@ export default function GroupDetailPage({
               showAlert(msg, "error");
             }}
           />
-
           <ActionModal
             isOpen={isTerminateModalOpen}
             onClose={() => setIsTerminateModalOpen(false)}
