@@ -18,6 +18,7 @@ import {
   XCircle,
   Star,
   Power,
+  Play,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
 import api from "@/lib/axios";
@@ -77,6 +78,7 @@ export default function GroupDetailPage({
   const [isCompleteModalOpen, setIsCompleteModalOpen] = useState(false);
   const [isTerminateModalOpen, setIsTerminateModalOpen] = useState(false);
   const [isRatingOpen, setIsRatingOpen] = useState(false);
+  const [isDoTaskOpen, setIsDoTaskOpen] = useState(false);
 
   const fetchGroupDetail = async () => {
     setIsLoading(true);
@@ -329,7 +331,8 @@ export default function GroupDetailPage({
                           </div>
                         </div>
 
-                        {user?.sid == groupDetail.groupOwnerId &&
+                        {(user?.sid === groupDetail?.groupOwnerId ||
+                          user?.sid === task?.assigneeId) &&
                           task?.status?.toLowerCase() !== "done" &&
                           task?.status?.toLowerCase() !== "terminate" && (
                             <>
@@ -348,36 +351,67 @@ export default function GroupDetailPage({
                                   align="end"
                                   className="w-40"
                                 >
-                                  <DropdownMenuItem
-                                    className="cursor-pointer text-yellow-400 focus:text-yellow-400 focus:bg-yellow-500/10"
-                                    onClick={() => {
-                                      setSelectedTask(task);
-                                      setIsEditModalOpen(true);
-                                    }}
-                                  >
-                                    <Edit className="mr-2 h-4 w-4" />
-                                    Edit Task
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    className="cursor-pointer text-green-400 focus:text-green-400 focus:bg-green-500/10"
-                                    onClick={() => {
-                                      setSelectedTask(task.id);
-                                      setIsCompleteModalOpen(true);
-                                    }}
-                                  >
-                                    <CheckCircle className="mr-2 h-4 w-4" />
-                                    Complete Task
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    className="cursor-pointer text-red-400 focus:text-red-400 focus:bg-red-500/10"
-                                    onClick={() => {
-                                      setSelectedTask(task.id);
-                                      setIsTerminateModalOpen(true);
-                                    }}
-                                  >
-                                    <XCircle className="mr-2 h-4 w-4" />
-                                    Terminate Task
-                                  </DropdownMenuItem>
+                                  {user?.sid === task?.assigneeId &&
+                                    task?.status?.toLowerCase() === "todo" && (
+                                      <>
+                                        <DropdownMenuItem
+                                          className="cursor-pointer text-indigo-500 focus:text-indigo-400 focus:bg-indigo-500/10 font-medium"
+                                          onClick={() => {
+                                            setSelectedTask(task.id);
+                                            setIsDoTaskOpen(true);
+                                          }}
+                                        >
+                                          <Play className="mr-2 h-4 w-4" />
+                                          Do this Task !
+                                        </DropdownMenuItem>
+                                      </>
+                                    )}
+
+                                  {user?.sid == groupDetail.groupOwnerId &&
+                                    task?.status?.toLowerCase() !== "done" &&
+                                    task?.status?.toLowerCase() !==
+                                      "terminate" && (
+                                      <>
+                                        <DropdownMenuItem
+                                          className="cursor-pointer text-yellow-400 focus:text-yellow-400 focus:bg-yellow-500/10"
+                                          onClick={() => {
+                                            setSelectedTask(task);
+                                            setIsEditModalOpen(true);
+                                          }}
+                                        >
+                                          <Edit className="mr-2 h-4 w-4" />
+                                          Edit Task
+                                        </DropdownMenuItem>
+
+                                        {user?.sid ==
+                                          groupDetail.groupOwnerId &&
+                                          task?.status?.toLowerCase() ===
+                                            "inreview" && (
+                                            <>
+                                              <DropdownMenuItem
+                                                className="cursor-pointer text-green-400 focus:text-green-400 focus:bg-green-500/10"
+                                                onClick={() => {
+                                                  setSelectedTask(task.id);
+                                                  setIsCompleteModalOpen(true);
+                                                }}
+                                              >
+                                                <CheckCircle className="mr-2 h-4 w-4" />
+                                                Complete Task
+                                              </DropdownMenuItem>
+                                            </>
+                                          )}
+                                        <DropdownMenuItem
+                                          className="cursor-pointer text-red-400 focus:text-red-400 focus:bg-red-500/10"
+                                          onClick={() => {
+                                            setSelectedTask(task.id);
+                                            setIsTerminateModalOpen(true);
+                                          }}
+                                        >
+                                          <XCircle className="mr-2 h-4 w-4" />
+                                          Terminate Task
+                                        </DropdownMenuItem>
+                                      </>
+                                    )}
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </>
@@ -523,7 +557,11 @@ export default function GroupDetailPage({
           </TabsContent>
 
           <TabsContent value="progress" className="space-y-4">
-            <SharedDocumentsTab groupId={id} user={user} />
+            <SharedDocumentsTab
+              groupId={id}
+              user={user}
+              tasks={groupDetail.tasks}
+            />
           </TabsContent>
         </Tabs>
       </div>
@@ -549,6 +587,31 @@ export default function GroupDetailPage({
           />
         </>
       )}
+
+      <ActionModal
+        isOpen={isDoTaskOpen}
+        onClose={() => setIsDoTaskOpen(false)}
+        endpoint={`/Task/change-status`}
+        payload={{
+          groupId: id,
+          leaderId: user?.sid,
+          taskId: selectedTask,
+          statusTask: "In Progress",
+        }}
+        icon={<Play className="h-7 w-7 text-indigo-500" />}
+        title="Start This Task"
+        variant="success"
+        description="Are you sure you want to Start this task?"
+        successMessage="Task Started!"
+        failedMessage="Failed to Start task!"
+        onSuccess={(msg: any) => {
+          showAlert(msg, "success");
+          fetchGroupDetail();
+        }}
+        onFailed={(msg: any) => {
+          showAlert(msg, "error");
+        }}
+      />
 
       {user?.sid == groupDetail.groupOwnerId && (
         <>
@@ -632,8 +695,13 @@ export default function GroupDetailPage({
           <ActionModal
             isOpen={isCompleteModalOpen}
             onClose={() => setIsCompleteModalOpen(false)}
-            endpoint={`/Task/complete-task`}
-            payload={{ leaderId: user?.sid, taskId: selectedTask }}
+            endpoint={`/Task/change-status`}
+            payload={{
+              groupId: id,
+              leaderId: user?.sid,
+              taskId: selectedTask,
+              statusTask: "Done",
+            }}
             icon={<CheckCircle className="h-7 w-7 text-green-600" />}
             title="Complete Task"
             variant="success"
@@ -652,8 +720,13 @@ export default function GroupDetailPage({
           <ActionModal
             isOpen={isTerminateModalOpen}
             onClose={() => setIsTerminateModalOpen(false)}
-            endpoint={`/Task/terminate-task`}
-            payload={{ leaderId: user?.sid, taskId: selectedTask }}
+            endpoint={`/Task/change-status`}
+            payload={{
+              groupId: id,
+              leaderId: user?.sid,
+              taskId: selectedTask,
+              statusTask: "Terminate",
+            }}
             icon={<Power className="h-7 w-7 text-red-500" />}
             title="Terminate Task"
             variant="danger"

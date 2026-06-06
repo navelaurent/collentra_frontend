@@ -119,7 +119,6 @@ export const EditTaskModal = ({
           title: form.title,
           description: form.description,
           assigneeId: form.assigneeId,
-          status: form.status,
           priority: form.priority,
           dueDate: form.dueDate,
           estimatedHours: 0,
@@ -201,6 +200,7 @@ export const EditTaskModal = ({
           <div className="space-y-2">
             <label className="text-sm font-medium text-gray-300">Status</label>
             <Select
+              disabled
               value={form.status}
               onValueChange={(v) => setForm({ ...form, status: v })}
             >

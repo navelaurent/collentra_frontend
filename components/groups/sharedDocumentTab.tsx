@@ -1,16 +1,17 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { FileText, Download, Paperclip, Send } from "lucide-react";
+import { FileText, Download, Paperclip, Send, ChevronUp } from "lucide-react";
 import api from "@/lib/axios";
 import { useAlert } from "@/components/ui/showAlert";
 
 interface SharedDocumentsTabProps {
   groupId: string;
   user: any;
+  tasks: any[];
 }
 
 const getDayLabel = (dateString: string) => {
@@ -55,8 +56,14 @@ const formatTimeOnly = (dateString: string) => {
   });
 };
 
-export function SharedDocumentsTab({ groupId, user }: SharedDocumentsTabProps) {
+export function SharedDocumentsTab({
+  groupId,
+  user,
+  tasks,
+}: SharedDocumentsTabProps) {
   const { showAlert } = useAlert();
+
+  const chatEndRef = useRef<HTMLDivElement | null>(null);
 
   const [groupedDocuments, setGroupedDocuments] = useState<{
     [key: string]: any[];
@@ -64,6 +71,9 @@ export function SharedDocumentsTab({ groupId, user }: SharedDocumentsTabProps) {
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+
+  const [selectedTaskId, setSelectedTaskId] = useState<string>("");
+  const [isTaskMenuOpen, setIsTaskMenuOpen] = useState(false);
 
   const groupDocumentsByDate = (docs: any[]) => {
     const grouped = docs.reduce((acc: { [key: string]: any[] }, doc) => {
@@ -99,6 +109,12 @@ export function SharedDocumentsTab({ groupId, user }: SharedDocumentsTabProps) {
     }
   }, [groupId]);
 
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: "auto" });
+    }
+  }, [groupedDocuments]);
+
   const handleUpload = async () => {
     if (!selectedFile) {
       showAlert("Please choose your file!", "error");
@@ -108,7 +124,12 @@ export function SharedDocumentsTab({ groupId, user }: SharedDocumentsTabProps) {
     const formUploadFile = new FormData();
     formUploadFile.append("GroupId", groupId);
     formUploadFile.append("SenderId", user?.sid);
+    formUploadFile.append("TaskId", selectedTaskId);
     formUploadFile.append("File", selectedFile);
+
+    if (selectedTaskId) {
+      formUploadFile.append("TaskId", selectedTaskId);
+    }
 
     setIsUploading(true);
     try {
@@ -125,6 +146,7 @@ export function SharedDocumentsTab({ groupId, user }: SharedDocumentsTabProps) {
       if (response.data?.status || response.status === 200) {
         showAlert("File uploaded successfully!", "success");
         setSelectedFile(null);
+        setSelectedTaskId("");
         fetchDocuments();
       } else {
         showAlert("Failed upload File !", "error");
@@ -162,6 +184,11 @@ export function SharedDocumentsTab({ groupId, user }: SharedDocumentsTabProps) {
   };
 
   const dateLabels = Object.keys(groupedDocuments);
+
+  const selectedTaskName =
+    tasks?.find((t: any) => t.id === selectedTaskId)?.name ||
+    tasks?.find((t: any) => t.id === selectedTaskId)?.title ||
+    "Select Task";
 
   return (
     <Card className="p-0 flex flex-col h-[500px] overflow-hidden">
@@ -273,10 +300,57 @@ export function SharedDocumentsTab({ groupId, user }: SharedDocumentsTabProps) {
             No documents shared yet.
           </div>
         )}
+
+        <div ref={chatEndRef} />
       </div>
 
-      <div className="p-4 border-t border-border bg-card shadow-sm z-10">
-        <div className="flex items-center gap-2">
+      <div className="p-4 border-t border-border bg-card shadow-sm z-10 relative">
+        <div className="flex items-center gap-2 relative">
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setIsTaskMenuOpen(!isTaskMenuOpen)}
+              className="flex items-center justify-between gap-2 px-3 py-2.5 border border-border rounded-lg text-sm text-muted-foreground bg-background hover:bg-muted/50 transition-colors w-[130px] sm:w-[150px]"
+            >
+              <span className="truncate">{selectedTaskName}</span>
+              <ChevronUp
+                className={`h-4 w-4 shrink-0 transition-transform ${isTaskMenuOpen ? "rotate-180" : ""}`}
+              />
+            </button>
+
+            {isTaskMenuOpen && (
+              <div className="absolute bottom-full left-0 mb-2 w-full min-w-[200px] max-h-[200px] overflow-y-auto bg-card border border-border rounded-lg shadow-lg z-50 flex flex-col py-1">
+                {tasks &&
+                tasks.filter((task: any) => task.assigneeId === user?.sid)
+                  .length > 0 ? (
+                  tasks
+                    .filter(
+                      (task: any) =>
+                        task.assigneeId === user?.sid &&
+                        task.status === "InProgress",
+                    )
+                    .map((task: any) => (
+                      <button
+                        key={task.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedTaskId(task.id);
+                          setIsTaskMenuOpen(false);
+                        }}
+                        className="text-left px-3 py-2 text-sm hover:bg-muted transition-colors text-foreground"
+                      >
+                        {task.name || task.title || "Unnamed Task"}
+                      </button>
+                    ))
+                ) : (
+                  <div className="px-3 py-2 text-sm text-muted-foreground">
+                    No tasks assigned to you
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
           <input
             type="file"
             className="hidden"
@@ -287,18 +361,16 @@ export function SharedDocumentsTab({ groupId, user }: SharedDocumentsTabProps) {
             }}
           />
           <label htmlFor="file-upload" className="flex-1 cursor-pointer">
-            <div className="flex items-center gap-2 w-full px-4 py-2.5 border rounded-lg">
+            <div className="flex items-center gap-2 w-full px-4 py-2.5 border rounded-lg bg-background hover:bg-muted/30 transition-colors">
               <Paperclip className="h-4 w-4 text-muted-foreground shrink-0" />
               <span className="text-sm text-muted-foreground truncate">
-                {selectedFile
-                  ? selectedFile.name
-                  : "Select a document to share..."}
+                {selectedFile ? selectedFile.name : "Select a File to share..."}
               </span>
             </div>
           </label>
           <button
             onClick={handleUpload}
-            disabled={isUploading || !selectedFile}
+            disabled={isUploading || !selectedFile || !selectedTaskId}
             className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive text-primary-foreground hover:bg-primary/90 h-9 px-4 py-2 has-[>svg]:px-3 gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500"
           >
             <Send className="h-4 w-4" />
