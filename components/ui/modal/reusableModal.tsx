@@ -12,12 +12,12 @@ interface ReusableModalProps {
   maxWidth?: string;
 }
 
-export const ReusableModal = ({ 
-  isOpen, 
-  onClose, 
-  title, 
-  children, 
-  maxWidth = "max-w-md" 
+export const ReusableModal = ({
+  isOpen,
+  onClose,
+  title,
+  children,
+  maxWidth = "max-w-md",
 }: ReusableModalProps) => {
   return (
     <AnimatePresence>
