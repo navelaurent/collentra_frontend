@@ -53,7 +53,7 @@ export const AlertProvider = ({ children }: { children: ReactNode }) => {
             <AlertCircle className="w-7 h-7 text-red-400 shrink-0" />
           )}
           <span className="font-bold text-lg text-white/90">
-            {alert.type === "success" ? "Sukses!" : "Gagal"}
+            {alert.type === "success" ? "Success!" : "Failed!"}
           </span>
           <button
             onClick={() => setAlert({ ...alert, show: false })}
