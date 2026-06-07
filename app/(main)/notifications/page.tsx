@@ -14,6 +14,11 @@ import {
   Send,
   Check,
   X,
+  UserMinus,
+  Crown,
+  ClipboardList,
+  UserX,
+  Bell,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import api from "@/lib/axios";
@@ -68,6 +73,58 @@ export default function NotificationsPage() {
 
     fetchAllData();
   }, [user?.sid]);
+
+  function getIconByTitle(title: string) {
+    const t = title?.toLowerCase() ?? "";
+
+    if (
+      t.includes("kicked") ||
+      t.includes("kicked!") ||
+      t.includes("you got kicked") ||
+      t.includes("dikeluarkan")
+    ) {
+      return UserX;
+    }
+    if (
+      t.includes("new task") ||
+      t.includes("task assigned") ||
+      t.includes("assigned")
+    ) {
+      return ClipboardList;
+    }
+    if (
+      t.includes("new member") ||
+      t.includes("member has arrived") ||
+      t.includes("joined") ||
+      t.includes("has arrived")
+    ) {
+      return UserPlus;
+    }
+    if (
+      t.includes("promoted") ||
+      t.includes("promoted to admin") ||
+      t.includes("admin")
+    ) {
+      return Crown;
+    }
+    if (
+      t.includes("member left") ||
+      t.includes("left the group") ||
+      t.includes("left")
+    ) {
+      return UserMinus;
+    }
+    if (
+      t.includes("rating") ||
+      t.includes("rated") ||
+      t.includes("you got new rating") ||
+      t.includes("new rating")
+    ) {
+      return Star;
+    }
+
+    return Bell;
+  }
 
   const unreadCount =
     activities.filter((n) => !n.isOpen).length +
@@ -283,7 +340,7 @@ export default function NotificationsPage() {
               </Card>
             ) : (
               activities.map((notification) => {
-                const Icon = notification.icon;
+                const Icon = getIconByTitle(notification.title);
                 return (
                   <Card
                     key={notification.id}
