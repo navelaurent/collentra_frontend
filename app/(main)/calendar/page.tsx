@@ -34,7 +34,7 @@ export default function CalendarPage() {
         const data = res.data?.data || res.data || [];
         setEvents(data);
       } catch (error) {
-        console.error("Gagal mengambil data kalender:", error);
+        console.error("Failed fetch data:", error);
       } finally {
         setLoading(false);
       }
