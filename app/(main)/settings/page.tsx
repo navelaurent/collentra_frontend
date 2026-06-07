@@ -13,12 +13,15 @@ import {
 } from "@/components/ui/select";
 import { Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
+import api from "@/lib/axios";
+import { getUserInfo } from "@/helpers/authHelpers";
 
 export default function SettingsPage() {
+  const user = getUserInfo();
   const [darkMode, setDarkMode] = useState(true);
   const [visibility, setVisibility] = useState("public");
   const [mounted, setMounted] = useState(false);
-
+  const [saving, setSaving] = useState(false);
   const [initialSettings, setInitialSettings] = useState({
     darkMode: true,
     visibility: "public",
@@ -35,6 +38,19 @@ export default function SettingsPage() {
   };
 
   useEffect(() => {
+    const fetchTargetUser = async () => {
+      try {
+        const res = await api.get("/RatingComment/getUserById", {
+          params: { userId: user?.sid },
+        });
+
+        const vis = res.data.data.showComment == false ? "private" : "public";
+        setVisibility(vis);
+      } catch (err) {
+        console.error("Error fetching target user:", err);
+      }
+    };
+
     const savedTheme = localStorage.getItem("theme");
     const isDark =
       savedTheme === "dark" ||
@@ -48,6 +64,7 @@ export default function SettingsPage() {
       visibility: "public",
     });
     setMounted(true);
+    fetchTargetUser();
   }, []);
 
   useEffect(() => {
@@ -63,15 +80,30 @@ export default function SettingsPage() {
     darkMode !== initialSettings.darkMode ||
     visibility !== initialSettings.visibility;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     localStorage.setItem("theme", darkMode ? "dark" : "light");
 
-    setInitialSettings({
-      darkMode,
-      visibility,
-    });
-  };
+    setSaving(true);
+    try {
+      const res = await api.post("/RatingComment/update-user", {
+        userId: user?.sid,
+        showComment: visibility,
+      });
 
+      if (res.status >= 200 && res.status < 300) {
+        setInitialSettings({
+          darkMode,
+          visibility,
+        });
+      } else {
+        throw new Error(`Server responded with status ${res.status}`);
+      }
+    } catch (error) {
+      console.error("Failed to save settings:", error);
+    } finally {
+      setSaving(false);
+    }
+  };
   const handleCancel = () => {
     setDarkMode(initialSettings.darkMode);
     setVisibility(initialSettings.visibility);
@@ -113,13 +145,16 @@ export default function SettingsPage() {
           <h3 className="font-semibold text-foreground">Privacy & Security</h3>
           <div className="mt-4">
             <p className="font-medium text-foreground">Profile Visibility</p>
-            <Select value={visibility} onValueChange={setVisibility}>
+            <Select
+              value={visibility === "private" ? "0" : "1"}
+              onValueChange={setVisibility}
+            >
               <SelectTrigger className="w-full mt-2">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="public">Public</SelectItem>
-                <SelectItem value="private">Private</SelectItem>
+                <SelectItem value="1">Public</SelectItem>
+                <SelectItem value="0">Private</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -128,10 +163,10 @@ export default function SettingsPage() {
         <div className="flex flex-col sm:flex-row gap-3 pt-4">
           <Button
             onClick={handleSave}
-            disabled={!hasChanges}
+            disabled={!hasChanges || saving}
             className="w-full sm:w-auto transition-all"
           >
-            Save Changes
+            {saving ? "Saving..." : "Save Changes"}
           </Button>
           <Button
             variant="outline"

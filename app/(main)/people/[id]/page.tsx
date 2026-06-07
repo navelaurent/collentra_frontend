@@ -55,8 +55,6 @@ export default function ProfilePage() {
 
         if (res.data?.data) {
           setTargetUser(res.data.data);
-        } else {
-          setTargetUser({ username: "User Member", email: "user@example.com" });
         }
       } catch (err) {
         console.error("Error fetching target user:", err);
@@ -320,6 +318,10 @@ export default function ProfilePage() {
                 {ratingDetail?.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">
                     No ratings yet.
+                  </p>
+                ) : displayUser?.showComment == false ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">
+                    Rating and comments are hidden by users.
                   </p>
                 ) : (
                   ratingDetail?.map((rating) => (
