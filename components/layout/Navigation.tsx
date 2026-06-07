@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { Bell, LogOut, Settings, User, Menu, X } from "lucide-react";
+import { Bell, LogOut, User, Menu, X } from "lucide-react";
 import { Button } from "../ui/button";
 import {
   DropdownMenu,
@@ -14,6 +14,8 @@ import {
 import Cookies from "js-cookie";
 import { LogoutModal } from "../ui/modal/logout_modal";
 import { getUserInfo } from "@/helpers/authHelpers";
+import Image from "next/image";
+import logoImg from "../../public/logo.png";
 
 export function Navigation() {
   const user = getUserInfo();
@@ -30,15 +32,23 @@ export function Navigation() {
     <>
       <nav className="sticky top-0 z-40 w-full border-b border-border bg-card">
         <div className="flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent" />
-            <span className="font-bold text-lg hidden sm:inline">
+          <Link href="/" className="flex items-center gap-2 group">
+            <div className="relative h-8 w-8 overflow-hidden rounded-lg">
+              <Image
+                src={logoImg}
+                alt="Collentra Logo"
+                fill
+                sizes="32px"
+                className="object-cover"
+                priority
+              />
+            </div>
+
+            <span className="font-bold text-lg hidden sm:inline text-foreground">
               Collentra
             </span>
           </Link>
 
-          {/* Desktop Menu */}
           <div className="hidden md:flex items-center gap-2">
             <Button variant="ghost" size="sm" asChild>
               <Link href="/notifications">
