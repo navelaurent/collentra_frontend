@@ -26,8 +26,8 @@ const navItems = [
     icon: FolderOpen,
   },
   {
-    label: "Friends",
-    href: "/friends",
+    label: "People",
+    href: "/people",
     icon: Users,
   },
   {

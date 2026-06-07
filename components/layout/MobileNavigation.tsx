@@ -17,6 +17,11 @@ const navItems = [
     icon: FolderOpen,
   },
   {
+    label: "People",
+    href: "/people",
+    icon: Users,
+  },
+  {
     label: "Calendar",
     href: "/calendar",
     icon: Calendar,

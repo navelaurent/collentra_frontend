@@ -20,6 +20,7 @@ import {
 import { useEffect, useState } from "react";
 import { getUserInfo } from "@/helpers/authHelpers";
 import api from "@/lib/axios";
+import { useParams } from "next/navigation";
 
 interface GetRatingResponse {
   rating: number;
@@ -27,7 +28,14 @@ interface GetRatingResponse {
   groupCount?: number;
   taskCompleted?: number;
   memberSince?: string;
+  gender?: string;
+  dob?: string;
   [key: string]: any;
+}
+
+interface TargetUser {
+  username: string;
+  email: string;
 }
 
 const mockAchievements = [
@@ -51,50 +59,43 @@ const mockAchievements = [
   },
 ];
 
-const mockRatings = [
-  {
-    id: "1",
-    from: "Sarah Johnson",
-    rating: 5,
-    comment:
-      "Excellent work on the design system. Very thorough and professional.",
-    project: "Design System",
-    date: "2024-03-28",
-  },
-  {
-    id: "2",
-    from: "Mike Chen",
-    rating: 4,
-    comment: "Great collaboration on the API documentation.",
-    project: "Design System",
-    date: "2024-03-25",
-  },
-  {
-    id: "3",
-    from: "Emma Davis",
-    rating: 5,
-    comment: "Always delivers quality work on time.",
-    project: "Marketing Campaign",
-    date: "2024-03-20",
-  },
-];
-
 export default function ProfilePage() {
+  const params = useParams();
+  const id = params?.id as string;
+
+  const loggedInUser = getUserInfo();
+  const isOwnProfile = loggedInUser?.sid === id;
+
   const [isEditing, setIsEditing] = useState(false);
-  const user = getUserInfo();
+  const [targetUser, setTargetUser] = useState<TargetUser | null>(null);
   const [rate, setRate] = useState<GetRatingResponse | null>(null);
   const [homeInfo, setHomeInfo] = useState<GetRatingResponse | null>(null);
-  const [ratingDetail, setRatingDetail] = useState<GetRatingResponse | null>(
-    null,
-  );
+  const [ratingDetail, setRatingDetail] = useState<any[]>([]);
 
   const [isLoadingStats, setIsLoadingStats] = useState(true);
 
   useEffect(() => {
+    if (!id) return;
+    const fetchTargetUser = async () => {
+      try {
+        const res = await api.get("/RatingComment/getUserById", {
+          params: { userId: id },
+        });
+
+        if (res.data?.data) {
+          setTargetUser(res.data.data);
+        } else {
+          setTargetUser({ username: "User Member", email: "user@example.com" });
+        }
+      } catch (err) {
+        console.error("Error fetching target user:", err);
+      }
+    };
+
     const fetchRating = async () => {
       try {
         const res = await api.get("/RatingComment/get-rating", {
-          params: { userId: user?.sid },
+          params: { userId: id },
         });
         setRate(res.data.data);
       } catch (err) {
@@ -106,7 +107,7 @@ export default function ProfilePage() {
       try {
         setIsLoadingStats(true);
         const res = await api.get("/Task/getHomeInformation", {
-          params: { userId: user?.sid },
+          params: { userId: id },
         });
         setHomeInfo(res.data);
       } catch (error) {
@@ -118,22 +119,20 @@ export default function ProfilePage() {
 
     const fetchRatingDetail = async () => {
       try {
-        setIsLoadingStats(true);
         const res = await api.get("/RatingComment/get-rate-comment", {
-          params: { userId: user?.sid },
+          params: { userId: id },
         });
-        setRatingDetail(res.data.data);
+        setRatingDetail(res.data.data || []);
       } catch (error) {
-        console.error("Error fetching stats:", error);
-      } finally {
-        setIsLoadingStats(false);
+        console.error("Error fetching rating detail:", error);
       }
     };
 
+    fetchTargetUser();
     fetchStats();
     fetchRating();
     fetchRatingDetail();
-  }, []);
+  }, [id]);
 
   const formatMemberSince = (dateString: string | undefined) => {
     if (!dateString) return "-";
@@ -147,6 +146,8 @@ export default function ProfilePage() {
     });
   };
 
+  const displayUser = isOwnProfile ? loggedInUser : targetUser;
+
   return (
     <MainLayout>
       <div className="space-y-8 p-4 sm:p-6 lg:p-8">
@@ -155,21 +156,26 @@ export default function ProfilePage() {
             <div className="relative">
               <Avatar className="h-24 w-24">
                 <AvatarFallback className="bg-gradient-to-br from-primary to-accent text-white text-2xl">
-                  {user?.name?.substring(0, 2).toUpperCase() || "US"}
+                  {displayUser?.username?.substring(0, 2).toUpperCase() || "US"}
                 </AvatarFallback>
               </Avatar>
-              <button className="absolute bottom-0 right-0 p-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
-                <Camera className="h-4 w-4" />
-              </button>
+
+              {isOwnProfile && (
+                <button className="absolute bottom-0 right-0 p-2 rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
+                  <Camera className="h-4 w-4" />
+                </button>
+              )}
             </div>
 
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-foreground">
-                {user ? user?.name : "name"}
+                {displayUser?.username || "Loading..."}
               </h1>
 
-              <div className="flex items-center gap-2 mt-3">
-                <Badge variant="secondary">{homeInfo?.groupCount} Groups</Badge>
+              <div className="flex items-center gap-2 mt-3 flex-wrap">
+                <Badge variant="secondary">
+                  {homeInfo?.groupCount || 0} Groups
+                </Badge>
                 <Badge variant="outline">12 Friends</Badge>
                 <div className="flex items-center gap-1 ml-2">
                   {[...Array(5)].map((_, i) => (
@@ -185,9 +191,11 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <Button onClick={() => setIsEditing(!isEditing)}>
-              {isEditing ? "Save" : "Edit Profile"}
-            </Button>
+            {isOwnProfile && (
+              <Button onClick={() => setIsEditing(!isEditing)}>
+                {isEditing ? "Save Profile" : "Edit Profile"}
+              </Button>
+            )}
           </div>
         </Card>
 
@@ -197,7 +205,7 @@ export default function ProfilePage() {
             <TabsTrigger value="ratings">Ratings</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="about" className="space-y-4">
+          <TabsContent value="about" className="space-y-4 mt-6">
             <Card className="p-6">
               <h3 className="font-semibold text-foreground mb-4">
                 Personal Information
@@ -209,9 +217,9 @@ export default function ProfilePage() {
                   </label>
                   <div className="relative mt-1">
                     <Input
-                      value={user?.email || ""}
+                      value={displayUser?.email || ""}
                       disabled
-                      className="pl-10 font-medium transition-colors border-white/20 text-foreground bg-background disabled:opacity-100"
+                      className="pl-10 font-medium transition-colors border-border text-foreground bg-background disabled:opacity-100"
                     />
                     <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
                       <Mail className="h-4 w-4 text-muted-foreground" />
@@ -223,13 +231,13 @@ export default function ProfilePage() {
                     Bio
                   </label>
                   <textarea
-                    disabled={!isEditing}
+                    disabled={!isEditing || !isOwnProfile}
                     defaultValue="Passionate about design and team collaboration. Currently leading the design system initiative."
-                    className="w-full mt-1 p-2 rounded-lg border border-white/20 bg-background text-foreground disabled:opacity-60"
+                    className="w-full mt-1 p-2 rounded-lg border border-border bg-background text-foreground disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-primary/20"
                     rows={4}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="text-sm font-medium text-muted-foreground">
                       Date of Birth
@@ -238,7 +246,7 @@ export default function ProfilePage() {
                       <Input
                         value={formatMemberSince(homeInfo?.dob)}
                         disabled
-                        className="pl-10 font-medium transition-colors border-white/20 text-foreground bg-background disabled:opacity-100"
+                        className="pl-10 font-medium transition-colors border-border text-foreground bg-background disabled:opacity-100"
                       />
                       <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
                         <Cake className="h-4 w-4 text-muted-foreground" />
@@ -251,20 +259,28 @@ export default function ProfilePage() {
                     </label>
                     <div className="relative mt-1">
                       <Input
-                        value={homeInfo?.gender === "M" ? "Male" : "Female"}
+                        value={
+                          homeInfo?.gender === "M"
+                            ? "Male"
+                            : homeInfo?.gender === "F"
+                              ? "Female"
+                              : "-"
+                        }
                         disabled
                         className={`pl-10 font-medium transition-colors ${
                           homeInfo?.gender === "M"
-                            ? "border-blue-500/50 text-blue-400 bg-blue-500/5 disabled:opacity-100"
-                            : "border-pink-500/50 text-pink-400 bg-pink-500/5 disabled:opacity-100"
+                            ? "border-blue-500/50 text-blue-500 bg-blue-500/5 disabled:opacity-100 dark:text-blue-400"
+                            : homeInfo?.gender === "F"
+                              ? "border-pink-500/50 text-pink-500 bg-pink-500/5 disabled:opacity-100 dark:text-pink-400"
+                              : "border-border disabled:opacity-100"
                         }`}
                       />
                       <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
                         {homeInfo?.gender === "M" ? (
-                          <Mars className="h-4 w-4 text-blue-400" />
-                        ) : (
-                          <Venus className="h-4 w-4 text-pink-400" />
-                        )}
+                          <Mars className="h-4 w-4 text-blue-500 dark:text-blue-400" />
+                        ) : homeInfo?.gender === "F" ? (
+                          <Venus className="h-4 w-4 text-pink-500 dark:text-pink-400" />
+                        ) : null}
                       </div>
                     </div>
                   </div>
@@ -281,7 +297,7 @@ export default function ProfilePage() {
                     <div className="h-8 w-16 bg-muted animate-pulse rounded mt-2"></div>
                   ) : (
                     <p className="text-2xl font-bold text-foreground mt-2">
-                      {homeInfo?.groupCount}
+                      {homeInfo?.groupCount || 0}
                     </p>
                   )}
                 </div>
@@ -293,7 +309,7 @@ export default function ProfilePage() {
                     <div className="h-8 w-16 bg-muted animate-pulse rounded mt-2"></div>
                   ) : (
                     <p className="text-2xl font-bold text-foreground mt-2">
-                      {homeInfo?.taskCompleted}
+                      {homeInfo?.taskCompleted || 0}
                     </p>
                   )}
                 </div>
@@ -321,7 +337,7 @@ export default function ProfilePage() {
             </Card>
           </TabsContent>
 
-          <TabsContent value="ratings" className="space-y-4">
+          <TabsContent value="ratings" className="space-y-4 mt-6">
             <Card className="p-6">
               <h3 className="font-semibold text-foreground mb-4">
                 Feedback from Group Members
