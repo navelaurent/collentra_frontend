@@ -10,16 +10,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Camera,
   Star,
-  Trophy,
-  Award,
   Mars,
   Venus,
   Cake,
   Mail,
+  CheckCircle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getUserInfo } from "@/helpers/authHelpers";
 import api from "@/lib/axios";
+import { ActionModal } from "@/components/ui/modal/ActionModal";
+import { useAlert } from "@/components/ui/showAlert";
 
 interface GetRatingResponse {
   rating: number;
@@ -30,67 +31,105 @@ interface GetRatingResponse {
   [key: string]: any;
 }
 
-const mockAchievements = [
-  {
-    id: "1",
-    name: "Team Player",
-    description: "Completed 10 group projects",
-    icon: Trophy,
-  },
-  {
-    id: "2",
-    name: "Top Performer",
-    description: "Achieved 95%+ completion rate",
-    icon: Award,
-  },
-  {
-    id: "3",
-    name: "Quick Starter",
-    description: "Started 5 groups",
-    icon: Star,
-  },
-];
-
-const mockRatings = [
-  {
-    id: "1",
-    from: "Sarah Johnson",
-    rating: 5,
-    comment:
-      "Excellent work on the design system. Very thorough and professional.",
-    project: "Design System",
-    date: "2024-03-28",
-  },
-  {
-    id: "2",
-    from: "Mike Chen",
-    rating: 4,
-    comment: "Great collaboration on the API documentation.",
-    project: "Design System",
-    date: "2024-03-25",
-  },
-  {
-    id: "3",
-    from: "Emma Davis",
-    rating: 5,
-    comment: "Always delivers quality work on time.",
-    project: "Marketing Campaign",
-    date: "2024-03-20",
-  },
-];
+interface TargetUser {
+  username: string;
+  email: string;
+  bio: string;
+}
 
 export default function ProfilePage() {
+  const { showAlert } = useAlert();
   const [isEditing, setIsEditing] = useState(false);
   const user = getUserInfo();
   const [rate, setRate] = useState<GetRatingResponse | null>(null);
   const [homeInfo, setHomeInfo] = useState<GetRatingResponse | null>(null);
+  const [targetUser, setTargetUser] = useState<TargetUser | null>(null);
   const [ratingDetail, setRatingDetail] = useState<GetRatingResponse | null>(
     null,
   );
-
   const [isLoadingStats, setIsLoadingStats] = useState(true);
+  const [bioUser, setBioUser] = useState("");
+
+  const [isConfirmModalOpen, setIsConfirmModalOpen] = useState<boolean>(false);
+  const [saving, setSaving] = useState<boolean>(false);
+  const [originalBio, setOriginalBio] = useState<string>("");
+  const [isDirty, setIsDirty] = useState<boolean>(false);
 
   useEffect(() => {
+    const initial =
+      targetUser?.bio == null
+        ? "This person dont have bio yet"
+        : targetUser.bio;
+    setBioUser(initial);
+    setOriginalBio(initial);
+    setIsDirty(false);
+  }, [targetUser]);
+
+  useEffect(() => {
+    setIsDirty(bioUser !== originalBio);
+  }, [bioUser, originalBio]);
+
+  const handlePrimaryButton = () => {
+    if (!isEditing) {
+      setIsEditing(true);
+      return;
+    }
+
+    if (isDirty) {
+      setIsConfirmModalOpen(true);
+      return;
+    }
+
+    setIsEditing(false);
+  };
+
+  const handleConfirmSave = async () => {
+    setIsConfirmModalOpen(false);
+    setSaving(true);
+
+    try {
+      await api.post(
+        "/User/updateBio",
+        { frombody: bioUser },
+        { params: { fromquery: fromQuery } },
+      );
+
+      setOriginalBio(bioUser);
+      setIsEditing(false);
+    } catch (err: any) {
+      console.error("Failed to save bio:", err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setBioUser(originalBio);
+    setIsEditing(false);
+    setIsConfirmModalOpen(false);
+  };
+
+  useEffect(() => {
+    setBioUser(
+      targetUser?.bio == null
+        ? "This person dont have bio yet"
+        : targetUser.bio,
+    );
+  }, [targetUser]);
+
+  useEffect(() => {
+    const fetchTargetUser = async () => {
+      try {
+        const res = await api.get("/RatingComment/getUserById", {
+          params: { userId: user?.sid },
+        });
+
+        setTargetUser(res.data.data);
+      } catch (err) {
+        console.error("Error fetching target user:", err);
+      }
+    };
+
     const fetchRating = async () => {
       try {
         const res = await api.get("/RatingComment/get-rating", {
@@ -130,6 +169,7 @@ export default function ProfilePage() {
       }
     };
 
+    fetchTargetUser();
     fetchStats();
     fetchRating();
     fetchRatingDetail();
@@ -184,9 +224,21 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <Button onClick={() => setIsEditing(!isEditing)}>
-              {isEditing ? "Save" : "Edit Profile"}
-            </Button>
+            <div className="mt-3 flex items-center gap-2">
+              <Button onClick={handlePrimaryButton} disabled={saving}>
+                {isEditing ? (isDirty ? "Save" : "Done") : "Edit Profile"}
+              </Button>
+
+              {isEditing && (
+                <Button
+                  onClick={handleCancelEdit}
+                  disabled={saving}
+                  className="bg-transparent border"
+                >
+                  Cancel
+                </Button>
+              )}
+            </div>
           </div>
         </Card>
 
@@ -223,7 +275,8 @@ export default function ProfilePage() {
                   </label>
                   <textarea
                     disabled={!isEditing}
-                    defaultValue="Passionate about design and team collaboration. Currently leading the design system initiative."
+                    defaultValue={bioUser}
+                    onChange={(e) => setBioUser(e.target.value)}
                     className="w-full mt-1 p-2 rounded-lg border border-white/20 bg-background text-foreground disabled:opacity-60"
                     rows={4}
                   />
@@ -377,6 +430,28 @@ export default function ProfilePage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      <ActionModal
+        isOpen={isConfirmModalOpen}
+        onClose={() => setIsConfirmModalOpen(false)}
+        endpoint={`/RatingComment/update-user`}
+        payload={{
+          userId: user?.sid,
+          bio: bioUser,
+        }}
+        icon={<CheckCircle className="h-7 w-7 text-green-600" />}
+        title="Update Information"
+        variant="success"
+        description="Want to update your information?"
+        successMessage="Update Success!"
+        failedMessage="Failed to update!"
+        onSuccess={(msg: any) => {
+          showAlert(msg, "success");
+        }}
+        onFailed={(msg: any) => {
+          showAlert(msg, "error");
+        }}
+      />
     </MainLayout>
   );
 }

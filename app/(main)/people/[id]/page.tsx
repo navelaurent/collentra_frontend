@@ -7,16 +7,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Camera,
-  Star,
-  Trophy,
-  Award,
-  Mars,
-  Venus,
-  Cake,
-  Mail,
-} from "lucide-react";
+import { Camera, Star, Mars, Venus, Cake, Mail } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getUserInfo } from "@/helpers/authHelpers";
 import api from "@/lib/axios";
@@ -36,28 +27,8 @@ interface GetRatingResponse {
 interface TargetUser {
   username: string;
   email: string;
+  bio: string;
 }
-
-const mockAchievements = [
-  {
-    id: "1",
-    name: "Team Player",
-    description: "Completed 10 group projects",
-    icon: Trophy,
-  },
-  {
-    id: "2",
-    name: "Top Performer",
-    description: "Achieved 95%+ completion rate",
-    icon: Award,
-  },
-  {
-    id: "3",
-    name: "Quick Starter",
-    description: "Started 5 groups",
-    icon: Star,
-  },
-];
 
 export default function ProfilePage() {
   const params = useParams();
@@ -231,7 +202,11 @@ export default function ProfilePage() {
                   </label>
                   <textarea
                     disabled={!isEditing || !isOwnProfile}
-                    defaultValue="Passionate about design and team collaboration. Currently leading the design system initiative."
+                    defaultValue={
+                      displayUser?.bio === null
+                        ? "This person dont have bio yet"
+                        : displayUser?.bio
+                    }
                     className="w-full mt-1 p-2 rounded-lg border border-border bg-background text-foreground disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-primary/20"
                     rows={4}
                   />
