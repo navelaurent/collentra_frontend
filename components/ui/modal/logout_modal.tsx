@@ -47,11 +47,10 @@ export function LogoutModal({ isOpen, onClose, onConfirm }: LogoutModalProps) {
             <LogOut className="h-7 w-7 text-destructive" />
           </div>
           <h3 className="text-xl font-bold text-foreground tracking-tight">
-            Sudah selesai, {user?.name}?
+            Already done, {user?.name}?
           </h3>
           <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-            Sesi kamu akan ditutup. Jangan lupa simpan semua perubahan data
-            sebelum keluar.
+            Dont forget to Save all your data before exit !
           </p>
         </div>
 
