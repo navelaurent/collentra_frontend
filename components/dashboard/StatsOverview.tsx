@@ -2,7 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { Card } from "../ui/card";
-import { FolderOpen, CheckCircle2, Clock, TrendingUp } from "lucide-react";
+import {
+  FolderOpen,
+  CheckCircle2,
+  Clock,
+  TrendingUp,
+  AlertCircle,
+} from "lucide-react";
 import api from "@/lib/axios";
 import { getUserInfo } from "@/helpers/authHelpers";
 
@@ -27,6 +33,13 @@ const statsTemplate = [
     description: "Awaiting completion",
     icon: Clock,
     color: "from-amber-500 to-orange-500",
+  },
+  {
+    key: "taskOverdue",
+    label: "Overdue Tasks",
+    description: "Missed Deadline",
+    icon: AlertCircle,
+    color: "from-red-500 to-pink-500",
   },
 ];
 
@@ -54,7 +67,7 @@ export function StatsOverview() {
   }, []);
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       {statsTemplate.map((stat) => {
         const Icon = stat.icon;
 

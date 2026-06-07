@@ -675,6 +675,7 @@ export default function GroupDetailPage({
               showAlert(msg, "error");
             }}
           />
+
           <InviteMemberModal
             isOpen={isInviteOpen}
             onClose={() => setIsInviteOpen(false)}
@@ -687,6 +688,7 @@ export default function GroupDetailPage({
               showAlert(msg, "error");
             }}
           />
+
           <AddTaskModal
             isOpen={isTaskOpen}
             onClose={() => setIsTaskOpen(false)}
@@ -733,6 +735,7 @@ export default function GroupDetailPage({
               showAlert(msg, "error");
             }}
           />
+
           <EditTaskModal
             isOpen={isEditModalOpen}
             onClose={() => {
@@ -750,6 +753,7 @@ export default function GroupDetailPage({
               showAlert(msg, "error");
             }}
           />
+
           <ActionModal
             isOpen={isCompleteModalOpen}
             onClose={() => setIsCompleteModalOpen(false)}
@@ -774,6 +778,7 @@ export default function GroupDetailPage({
               showAlert(msg, "error");
             }}
           />
+
           <ActionModal
             isOpen={isTerminateModalOpen}
             onClose={() => setIsTerminateModalOpen(false)}

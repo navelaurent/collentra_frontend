@@ -39,7 +39,6 @@ export function ActivityFeed() {
 
   const MS_PER_DAY = 1000 * 60 * 60 * 24;
 
-  // start of today (00:00)
   const startOfToday = () => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
@@ -50,13 +49,12 @@ export function ActivityFeed() {
     return date.getTime() < startOfToday().getTime();
   };
 
-  // apakah tanggal berada dalam 5 hari ke depan (termasuk hari ini)
   const isWithinNextFiveDays = (date: Date) => {
     const start = startOfToday();
 
     const end = new Date();
     end.setHours(23, 59, 59, 999);
-    end.setDate(end.getDate() + 4); // hari ini + 4 = total 5 hari
+    end.setDate(end.getDate() + 4);
 
     return date.getTime() >= start.getTime() && date.getTime() <= end.getTime();
   };
@@ -77,21 +75,18 @@ export function ActivityFeed() {
     return diffDays;
   };
 
-  // Ambil upcoming deadlines dalam 5 hari ke depan, exclude yang sudah lewat, exclude Done
-  // Urutkan descending (newer/further date first)
   const upcomingDeadlines = events
     .filter((e) => {
       if (!e.dueDate) return false;
       if (e.stats === "Done") return false;
       const d = new Date(e.dueDate);
-      if (isPast(d)) return false; // jangan tampilkan yang sudah lewat
+      if (isPast(d)) return false;
       return isWithinNextFiveDays(d);
     })
     .sort(
       (a, b) => new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime(),
     );
 
-  // Jika user memilih hari tertentu, ambil events untuk hari itu (exclude Done & past)
   const daySpecificEvents = selectedDay
     ? events
         .filter((e) => {
@@ -121,26 +116,22 @@ export function ActivityFeed() {
       }
     }
 
-    // Jika masih kurang dari 5, isi dengan task lain yang belum Done dan bukan yang dueDate sudah lewat
     if (result.length < 5) {
       const others = events
         .filter((e) => {
           if (e.stats === "Done") return false;
           if (usedIds.has(e.id)) return false;
-          // jika punya dueDate dan sudah lewat, exclude
           if (e.dueDate) {
             const d = new Date(e.dueDate);
             if (isPast(d)) return false;
           }
           return true;
         })
-        // Prioritaskan yang punya dueDate (urut descending), lalu yang tanpa dueDate
         .sort((a, b) => {
           const aHas = a.dueDate ? 0 : 1;
           const bHas = b.dueDate ? 0 : 1;
           if (aHas !== bHas) return aHas - bHas;
           if (a.dueDate && b.dueDate) {
-            // descending
             return (
               new Date(b.dueDate).getTime() - new Date(a.dueDate).getTime()
             );
