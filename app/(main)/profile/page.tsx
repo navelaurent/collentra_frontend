@@ -83,26 +83,6 @@ export default function ProfilePage() {
     setIsEditing(false);
   };
 
-  const handleConfirmSave = async () => {
-    setIsConfirmModalOpen(false);
-    setSaving(true);
-
-    try {
-      await api.post(
-        "/User/updateBio",
-        { frombody: bioUser },
-        { params: { fromquery: fromQuery } },
-      );
-
-      setOriginalBio(bioUser);
-      setIsEditing(false);
-    } catch (err: any) {
-      console.error("Failed to save bio:", err);
-    } finally {
-      setSaving(false);
-    }
-  };
-
   const handleCancelEdit = () => {
     setBioUser(originalBio);
     setIsEditing(false);
